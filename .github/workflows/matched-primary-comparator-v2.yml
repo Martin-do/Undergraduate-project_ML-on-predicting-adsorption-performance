@@ -1,0 +1,37 @@
+name: Matched primary comparator V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/matched_primary_comparator.py'
+      - 'validation_v2/primary_study_holdout_validation.py'
+      - 'validation_v2/primary_study_map.csv'
+      - 'validation_v2/feature_parity_validation.py'
+      - 'validation_v2/feature_parity_validation_fixed.py'
+      - 'validation_v2/study_aware_validation.py'
+      - 'final_final_adsorption_done_dataset.csv'
+      - '.github/workflows/matched-primary-comparator-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas scipy scikit-learn xgboost
+      - run: python validation_v2/matched_primary_comparator.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matched-primary-comparator-v2-results
+          path: validation_v2/outputs/matched_primary_comparator_*
+          if-no-files-found: error
