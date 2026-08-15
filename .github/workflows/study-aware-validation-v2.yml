@@ -59,6 +59,9 @@ jobs:
       - name: Recover upstream Iftikhar row references
         run: python validation_v2/upstream_iftikhar_ref_audit.py
 
+      - name: Inventory both upstream workbooks
+        run: python validation_v2/upstream_workbook_inventory.py
+
       - name: Run source-dependency ablation
         run: python validation_v2/source_dependency_ablation.py
 
