@@ -3,13 +3,18 @@
 The support rule is deliberately independent of held-out targets:
 
 1. fit the fold-safe original-feature preprocessor on training studies only;
-2. select continuous engineered/process descriptors and standardize them using
-   training rows only;
+2. select continuous engineered/process descriptors with non-zero variation in
+   the TRAINING fold and standardize them using training rows only;
 3. for every *training* row, measure mean distance to its k nearest rows from
    OTHER training primary studies (not same-paper repeats);
 4. define q95/q99 support thresholds from those cross-study training distances;
 5. measure held-out rows against the training set using the identical space;
 6. separately count engineered categorical levels not seen in training.
+
+Training-constant continuous variables are excluded from that fold's distance.
+Otherwise StandardScaler has no empirical scale to normalize a held-out change and
+would leave the difference in the variable's original units, creating an arbitrary
+mixed-unit distance artifact.
 
 A strict supported prediction requires q95 continuous support AND zero novel
 engineered categorical levels. No target value is used to decide support.
@@ -37,6 +42,7 @@ DOMAIN_MAP = HERE / "adsorbent_domain_map.csv"
 SUBSETS = ["broad_biogenic_waste", "waste_derived_carbon"]
 MODELS = ["RF", "XGB"]
 K_NEIGHBORS = 5
+TRAIN_STD_MIN = 1e-8
 
 CONTINUOUS_SUPPORT_FEATURES = [
     "surface_area_m2g",
@@ -78,6 +84,18 @@ def test_knn_distance(x_train: np.ndarray, x_test: np.ndarray, k: int) -> np.nda
         kk = min(k, len(dist))
         out[i] = float(np.mean(np.partition(dist, kk - 1)[:kk]))
     return out
+
+
+def select_variable_support_features(xtr: np.ndarray, names: list[str]):
+    """Return training-variable continuous feature names/indices and exclusions."""
+    candidates = [c for c in CONTINUOUS_SUPPORT_FEATURES if c in names]
+    candidate_idx = [names.index(c) for c in candidates]
+    std = np.std(xtr[:, candidate_idx], axis=0, ddof=0)
+    active_mask = np.isfinite(std) & (std > TRAIN_STD_MIN)
+    active = [c for c, keep in zip(candidates, active_mask) if keep]
+    active_idx = [i for i, keep in zip(candidate_idx, active_mask) if keep]
+    excluded = [c for c, keep in zip(candidates, active_mask) if not keep]
+    return active, active_idx, excluded
 
 
 def category_novelty(prep: DtypeSafeParityPreprocessor, raw_test: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
@@ -134,10 +152,12 @@ def main() -> None:
             xtr = prep.transform(raw_all.iloc[tr])
             xte = prep.transform(raw_all.iloc[te])
             names = list(prep.output_cols)
-            continuous = [c for c in CONTINUOUS_SUPPORT_FEATURES if c in names]
-            if len(continuous) < 8:
-                raise RuntimeError(f"Too few continuous support features resolved: {continuous}")
-            idx = [names.index(c) for c in continuous]
+            continuous, idx, excluded_constant = select_variable_support_features(xtr, names)
+            if len(continuous) < 5:
+                raise RuntimeError(
+                    f"Too few training-variable support features in fold {fold}: {continuous}; "
+                    f"excluded={excluded_constant}"
+                )
 
             support_scaler = StandardScaler().fit(xtr[:, idx])
             ztr = support_scaler.transform(xtr[:, idx])
@@ -160,7 +180,10 @@ def main() -> None:
                 "train_rows": int(len(tr)),
                 "test_rows": int(len(te)),
                 "train_studies": int(len(np.unique(train_groups))),
-                "continuous_features": int(len(continuous)),
+                "continuous_candidate_features": int(len([c for c in CONTINUOUS_SUPPORT_FEATURES if c in names])),
+                "continuous_active_features": int(len(continuous)),
+                "active_feature_names": " | ".join(continuous),
+                "excluded_training_constant_features": " | ".join(excluded_constant),
                 "support_knn_k": K_NEIGHBORS,
                 "train_cross_study_knn_q50": float(np.quantile(train_dist, 0.50)),
                 "train_cross_study_knn_q95": q95,
@@ -254,7 +277,10 @@ def main() -> None:
     audit = {
         "subsets": SUBSETS,
         "models": MODELS,
-        "continuous_support_features": CONTINUOUS_SUPPORT_FEATURES,
+        "continuous_support_candidates": CONTINUOUS_SUPPORT_FEATURES,
+        "training_std_min": TRAIN_STD_MIN,
+        "fold_constant_feature_rule": "exclude from distance whenever training standard deviation <= threshold",
+        "reason": "a training-constant variable has no data-derived scale; retaining its held-out difference would mix original units into standardized Euclidean distance",
         "support_knn_k": K_NEIGHBORS,
         "thresholds": "q95 and q99 of training-row cross-primary-study kNN distance, computed independently within each LOSO fold",
         "strict_rule": "q95 continuous support AND zero engineered categorical novelty",
@@ -265,6 +291,8 @@ def main() -> None:
 
     print("=== APPLICABILITY DOMAIN AUDIT ===")
     print(json.dumps(audit, indent=2))
+    print("\n=== FOLD FEATURE SELECTION ===")
+    print(folds[["subset", "held_out_study", "continuous_active_features", "excluded_training_constant_features"]].to_string(index=False))
     print("\n=== PERFORMANCE BY SUPPORT ===")
     print(summary_df.to_string(index=False))
     print("\n=== PER-STUDY SUPPORT + ERROR ===")
