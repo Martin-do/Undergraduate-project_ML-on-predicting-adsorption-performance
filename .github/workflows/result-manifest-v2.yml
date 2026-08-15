@@ -5,11 +5,11 @@ on:
     branches:
       - feature/study-aware-validation-v2
     paths:
-      - 'validation_v2/**'
+      - 'validation_v2/*.py'
+      - 'validation_v2/*.csv'
       - 'final_final_adsorption_done_dataset.csv'
       - 'Biochar_dye_filtered.xlsx'
       - 'Raw_data.xlsx'
-      - '.github/workflows/result-manifest-v2.yml'
   workflow_dispatch:
 
 permissions:
