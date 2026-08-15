@@ -53,6 +53,9 @@ jobs:
       - name: Run original-feature parity validation
         run: python validation_v2/feature_parity_validation_fixed.py
 
+      - name: Build Moosavi provenance inventory
+        run: python validation_v2/provenance_inventory.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
