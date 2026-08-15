@@ -1,6 +1,6 @@
 # ID-SEAD V2 — Phase 5 Applicability-Domain Findings
 
-Status: **confirmed scientific gate result; feature branch only**
+Status: **confirmed scientific gate result; corrected feature branch result**
 
 Phase 4 identified two candidate restricted domains with non-trivial leave-one-primary-study-out (LOSO) performance: broad biogenic waste and waste-derived carbon. Phase 5 asks whether a training-only support rule can identify unsupported held-out cases reliably enough to condition prediction or inverse design.
 
@@ -11,16 +11,33 @@ The applicability-domain (AD) diagnostic is target-independent.
 For each LOSO fold:
 
 1. fit the fold-safe original-feature preprocessor on training studies only;
-2. retain continuous engineered/process descriptors and standardize them with training statistics only;
-3. for every training row, calculate the mean distance to its five nearest rows from **other primary studies** so dense repeated points from one paper cannot define support;
-4. set q95 and q99 thresholds from those training cross-study distances;
-5. measure each held-out point against the training set in the same standardized space;
-6. separately flag engineered categorical levels absent from training;
-7. define the strict q95 rule as continuous q95 support **and** zero categorical novelty.
+2. identify the candidate continuous engineered/process descriptors;
+3. **exclude any candidate that is constant or near-constant in that training fold** because no empirical scale exists to normalize a held-out change;
+4. standardize the remaining continuous descriptors with training statistics only;
+5. for every training row, calculate the mean distance to its five nearest rows from **other primary studies** so dense repeated points from one paper cannot define support;
+6. set q95 and q99 thresholds from those training cross-study distances;
+7. measure each held-out point against the training set in the same standardized space;
+8. separately flag engineered categorical levels absent from training;
+9. define the strict q95 rule as continuous q95 support **and** zero categorical novelty.
 
 No target value is used to decide whether a point is supported. The legacy `Q_MAX = 624 mg/g` is not used.
 
-## 2. Broad-biogenic-waste domain
+## 2. Important correction to the first distance implementation
+
+The first Phase-5 diagnostic exposed extreme distances around ~500 for Li and Gao. A feature-level audit showed that these magnitudes were dominated by `contact_time_min` in folds where contact time was constant across every training study.
+
+Examples:
+
+- Li held out: training contact time = 600 min for all relevant training rows; Li = 60 min;
+- Gao held out: training contact time = 60 min; Gao includes 600 min.
+
+`StandardScaler` cannot estimate a variance for a constant training variable and effectively leaves the held-out difference in original units. Mixing that unscaled minute difference with standardized dimensions created an arbitrary distance artifact.
+
+**Correction:** fold-constant continuous variables are now excluded from distance. The earlier ~11%/~31% coverage figures and positive distance-error correlations are superseded and must not be cited as final V2 results.
+
+`dose_gL` is also inactive/constant in these restricted-domain folds under the parity preprocessing and is therefore excluded from the corrected distance calculation.
+
+## 3. Corrected broad-biogenic-waste AD result
 
 XGB before filtering:
 
@@ -29,27 +46,27 @@ XGB before filtering:
 - RMSE = **476.29 mg/g**;
 - MAE = **376.27 mg/g**.
 
-Training-derived AD coverage is very low:
+Corrected support results:
 
 | Rule | Coverage | Rows | R² | RMSE | MAE |
 |---|---:|---:|---:|---:|---:|
 | All | 100% | 92 | 0.619 | 476.29 | 376.27 |
-| Continuous q95 | **11.96%** | 11 | -1.664 | 376.57 | 308.81 |
-| Strict q95 | **10.87%** | 10 | -5.623 | 323.67 | 268.12 |
-| Continuous q99 | 16.30% | 15 | -1.543 | 335.23 | 265.20 |
+| Continuous q95 | **85.87%** | 79 | 0.616 | 449.05 | 381.57 |
+| Strict q95 | **61.96%** | 57 | 0.694 | 390.72 | 335.75 |
+| Continuous q99 | **91.30%** | 84 | 0.645 | 437.23 | 366.38 |
 
-The q95 rule correctly flags the catastrophic Alshabib/groundnut-shell study as unsupported, but it also rejects complete or nearly complete held-out studies whose prediction errors are materially lower:
+The strict rule improves aggregate XGB metrics on retained observations, but it is not a reliable failure detector:
 
-- Alshabib: 0% supported, XGB MAE 1532.57 mg/g;
-- Archin: 0% supported, XGB MAE 145.28 mg/g;
-- Gao: 4.76% continuous support / 0% strict, XGB MAE 496.97 mg/g;
-- Gupta: 100% supported, XGB MAE 268.12 mg/g;
-- Li: 0% supported, XGB MAE 348.52 mg/g;
-- Ravenni: 0% supported, XGB MAE 129.23 mg/g.
+- Alshabib: 0% supported; XGB MAE 1532.57 mg/g;
+- Archin: 0% supported; XGB MAE 145.28 mg/g;
+- Gao: 100% continuously supported but 0% strict because its engineered category is novel; XGB MAE 496.97 mg/g;
+- Gupta: 100% strict support; XGB MAE 268.12 mg/g;
+- Li: 97.96% continuous / 95.92% strict support; XGB MAE 348.52 mg/g;
+- Ravenni: 0% supported; XGB MAE 129.23 mg/g.
 
-Therefore the distance rule is not a practical rescue: it retains only about one tenth of the broad-biogenic observations and rejects several cases on which the model actually transfers reasonably well.
+Thus the rule rejects both the catastrophic Alshabib study and several relatively successful held-out studies. Its apparent aggregate improvement is therefore not sufficient evidence of a dependable safety gate.
 
-## 3. Waste-derived-carbon domain
+## 4. Corrected waste-derived-carbon AD result
 
 XGB before filtering:
 
@@ -58,60 +75,63 @@ XGB before filtering:
 - RMSE = **581.33 mg/g**;
 - MAE = **408.58 mg/g**.
 
-AD filtering lowers absolute error on the retained points but again at substantial coverage loss:
+Corrected support results:
 
 | Rule | Coverage | Rows | R² | RMSE | MAE |
 |---|---:|---:|---:|---:|---:|
 | All | 100% | 138 | 0.495 | 581.33 | 408.58 |
-| Continuous q95 | **31.16%** | 43 | -2.867 | 388.02 | 202.48 |
-| Strict q95 | **30.43%** | 42 | -5.283 | 376.93 | 190.35 |
+| Continuous q95 | **80.43%** | 111 | 0.384 | 643.97 | 487.27 |
+| Strict q95 | **64.49%** | 89 | 0.415 | 646.81 | 474.94 |
+| Continuous q99 | **81.16%** | 112 | 0.382 | 643.73 | 488.42 |
 
-Negative R² after filtering must not be interpreted in isolation because the retained subset has a narrower target range; the meaningful observation is that MAE falls while coverage falls to about 30%.
+Here the support filtering **makes predictive error worse**. Most importantly, the catastrophic Alshabib study is classified as 100% supported despite XGB MAE ≈ **1545 mg/g**.
 
-More importantly, the rule is **not reliably safety-selective**. In this broader domain the catastrophic Alshabib study is classified as 100% supported despite XGB MAE ≈ **1545 mg/g**. Thus support status changes materially with the chosen training domain and does not by itself identify high-error cases.
+This directly prevents the distance rule from being interpreted as a general reliability gate.
 
-## 4. Distance–error relationship
+## 5. Corrected distance–error relationship
 
-Point-level distance has some diagnostic signal but is not sufficient as a deployment gate.
+After removal of fold-constant artifacts, point-level distance is not positively associated with absolute error in a stable way.
 
-Spearman correlation between cross-study kNN distance and absolute error:
+Spearman correlation between corrected cross-study kNN distance and absolute error:
 
-- broad biogenic: RF **0.414**, XGB **0.205**;
-- waste-derived carbon: RF **0.645**, XGB **0.654**.
+- broad biogenic: RF **0.123**, XGB **-0.068**;
+- waste-derived carbon: RF **-0.279**, XGB **-0.283**.
 
-The stronger relationship in the waste-derived domain justifies keeping distance as one component of an applicability assessment, but not as the sole acceptance criterion.
+Pearson correlations are similarly weak or negative.
 
-## 5. Extreme-distance diagnosis required
+Therefore the earlier apparent positive distance-error relationship was largely driven by the scaling artifact and is not retained as a scientific result.
 
-Several studies show extremely large standardized cross-study distances, especially Li and Gao (~500 mean distance in some folds), while other studies are commonly in the ~2–9 range.
+## 6. What actually drives corrected distance
 
-This may represent genuine covariate/domain separation, but before interpreting the magnitude scientifically we must inspect:
+The corrected feature-decomposition audit shows real but study-specific covariate differences rather than one universal OOD direction.
 
-- feature-level contributions to nearest-neighbour distance;
-- training standard deviations within each fold;
-- whether near-constant training features are amplifying standardized differences;
-- which experimental variables drive the separation.
+Examples:
 
-No threshold tuning should be performed until this audit is complete.
+- **Alshabib, broad biogenic:** pyrolysis temperature contributes ~47% of squared distance, particle size ~25%, with pH/temperature terms also important;
+- **Li, broad biogenic:** temperature contributes ~51%, particle size ~14%, followed by concentration/ratio terms;
+- **Gao:** surface-area × pore-volume and pore-volume descriptors dominate;
+- **Ravenni:** particle size and pyrolysis temperature dominate;
+- **Wong, waste-derived:** temperature is the largest contributor.
 
-## 6. Scientific decision gate
+This confirms genuine inter-study descriptor shifts exist, but simple Euclidean support distance does not translate those shifts into reliable prediction-risk ranking.
 
-**Distance-only applicability-domain gate: FAIL for deployment/inverse design.**
+## 7. Scientific decision gate
 
-The result is informative, but it does not provide a sufficiently reliable acceptance rule:
+**Corrected distance-only applicability-domain gate: FAIL for deployment/inverse design.**
 
-1. broad-biogenic q95 coverage is only ~11%;
-2. several accurately predicted studies are rejected;
-3. in the waste-derived domain the catastrophic Alshabib study is incorrectly accepted;
-4. support is sensitive to the chosen training domain;
-5. distance–error correlation is not consistently strong enough to act as a safety criterion.
+The final Phase-5 reasoning is stronger than the provisional result:
+
+1. the first extreme-distance magnitudes were partly caused by a fold-constant scaling artifact and have been corrected;
+2. after correction, coverage is much higher, but support status still does not reliably separate high-error from low-error studies;
+3. in the waste-derived domain, filtering worsens XGB performance;
+4. the catastrophic Alshabib study is considered supported in the waste-derived domain;
+5. corrected distance-error correlation is weak or negative;
+6. support status remains sensitive to the chosen training domain.
 
 Therefore:
 
 - inverse design remains **BLOCKED**;
 - do not remove difficult studies post hoc;
 - do not tune the support threshold to maximize validation performance;
-- retain cross-study distance as a diagnostic feature only;
-- next evaluate feature-level distance drivers and a **group-aware predictive-uncertainty / residual-interval diagnostic** calibrated strictly from training studies.
-
-If uncertainty calibration also fails to identify unreliable study transfer, the inverse-design framing should be abandoned rather than weakened into a post-hoc filtered demonstration.
+- retain the corrected distance analysis as an explanatory domain-shift diagnostic only;
+- evaluate study-aware empirical residual intervals as the final reliability gate before deciding whether inverse design must be abandoned.
