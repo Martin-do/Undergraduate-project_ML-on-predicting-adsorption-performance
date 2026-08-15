@@ -56,6 +56,9 @@ jobs:
       - name: Build Moosavi provenance inventory
         run: python validation_v2/provenance_inventory.py
 
+      - name: Run source-dependency ablation
+        run: python validation_v2/source_dependency_ablation.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
