@@ -1,0 +1,47 @@
+name: Provenance audit V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/provenance_*.py'
+      - 'validation_v2/upstream_*.py'
+      - 'validation_v2/*provenance*.csv'
+      - 'final_final_adsorption_done_dataset.csv'
+      - '.github/workflows/provenance-audit-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build project provenance inventory
+        run: python validation_v2/provenance_inventory.py
+
+      - name: Recover upstream Iftikhar references
+        run: python validation_v2/upstream_iftikhar_ref_audit.py
+
+      - name: Inventory both upstream workbooks
+        run: python validation_v2/upstream_workbook_inventory.py
+
+      - name: Upload provenance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provenance-audit-v2-results
+          path: validation_v2/outputs/
+          if-no-files-found: error
