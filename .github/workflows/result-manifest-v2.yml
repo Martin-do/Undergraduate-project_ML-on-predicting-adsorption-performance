@@ -1,0 +1,90 @@
+name: Deterministic result manifest V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/**'
+      - 'final_final_adsorption_done_dataset.csv'
+      - 'Biochar_dye_filtered.xlsx'
+      - 'Raw_data.xlsx'
+      - '.github/workflows/result-manifest-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy scikit-learn xgboost openpyxl xlrd
+
+      - name: Regenerate leakage audit
+        run: python validation_v2/leakage_manifest_audit.py
+
+      - name: Regenerate physical-bound audit
+        run: python validation_v2/physical_bound_audit.py
+
+      - name: Regenerate original-feature comparator results
+        run: python validation_v2/feature_parity_validation_fixed.py
+
+      - name: Regenerate strict primary-study holdout
+        run: python validation_v2/primary_study_holdout_validation.py
+
+      - name: Regenerate precursor-domain audit
+        run: python validation_v2/precursor_domain_audit.py
+
+      - name: Regenerate domain-restricted LOSO
+        run: python validation_v2/domain_restricted_validation.py
+
+      - name: Regenerate corrected applicability-domain diagnostics
+        run: python validation_v2/applicability_domain_validation.py
+
+      - name: Regenerate group-aware uncertainty diagnostics
+        run: python validation_v2/group_aware_uncertainty.py
+
+      - name: Regenerate clean external validation
+        run: python validation_v2/external_validation_v2.py
+
+      - name: Reconcile legacy Liu saved output
+        run: python validation_v2/reconcile_legacy_liu_rowcount.py
+
+      - name: Build single source-of-truth result manifest
+        run: python validation_v2/build_result_manifest.py
+
+      - name: Upload deterministic evidence bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-result-manifest-v2
+          path: |
+            validation_v2/outputs/result_manifest_v2.csv
+            validation_v2/outputs/result_manifest_v2.json
+            validation_v2/outputs/result_manifest_v2_metadata.json
+            validation_v2/outputs/RESULT_MANIFEST_V2_SUMMARY.md
+            validation_v2/outputs/manifest_leakage_audit.json
+            validation_v2/outputs/physical_bound_audit.json
+            validation_v2/outputs/feature_parity_model_family_comparison.csv
+            validation_v2/outputs/primary_study_holdout_*
+            validation_v2/outputs/precursor_domain_*
+            validation_v2/outputs/domain_restricted_loso_*
+            validation_v2/outputs/applicability_domain_*
+            validation_v2/outputs/group_aware_uncertainty_*
+            validation_v2/outputs/external_v2_*
+            validation_v2/outputs/legacy_liu_rowcount_reconciliation.json
+          if-no-files-found: warn
