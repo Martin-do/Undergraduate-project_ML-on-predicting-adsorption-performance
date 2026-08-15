@@ -6,31 +6,31 @@ This file separates scientific-validation issues from manuscript-production issu
 
 ## A. Scientific validation — blocking before journal resubmission
 
-### A1. Study-level leakage risk — BLOCKING
+### A1. Study-level leakage risk — CONFIRMED / PRIMARY GATE FAILED
 
-The dataset contains multiple observations from the same literature source (`source_link`). The submitted/original implementation uses random row-level splitting. Closely related experiments from one source can therefore occur on both sides of a train/test split.
+The dataset contains multiple observations from the same literature studies. The submitted/original implementation uses random row-level splitting, allowing closely related experiments to appear on both sides of a train/test split.
 
-**V2 action:** compare row-wise K-fold against GroupKFold keyed by normalized `source_link`. No study may appear in both train and validation within a grouped fold.
+Confirmed evidence:
+- legacy-style 80/20 split: **62/64 test rows (96.875%)** share a source label with training rows;
+- the dominant 251-row block was incorrectly collapsed under `Moosavi et al., 2023` and is actually inherited from the Iftikhar et al. 2023 secondary dataset;
+- primary-study reconstruction now covers **238/251 inherited rows (94.82%) across 11 primary studies**;
+- strict primary-study holdout collapses the strong row-random results: RF R² = **-0.134**, XGB R² = **-0.189**, unconstrained Ridge stack R² = **-0.156**; LR is only slightly positive at **0.080** with RMSE ~691 mg/g.
 
-**Evidence required:**
-- source-overlap audit for the legacy-style split;
-- random-CV vs grouped-CV metrics for identical model families;
-- per-study out-of-fold predictions;
-- study-cluster bootstrap confidence intervals.
+**Disposition:** the submitted row-random performance cannot be presented as unseen-study generalization. The stack has failed the current predictive-superiority gate.
 
-### A2. Fold-safe preprocessing — BLOCKING
+### A2. Fold-safe preprocessing — RESOLVED FOR CURRENT VALIDATION HARNESS
 
-All imputation, scaling, encoding and train-derived transformations must be fit only on the training portion of each fold.
+All imputation, scaling, encoding and train-derived transformations are fit only on the training portion of each fold.
 
-Known original-code issue: class-conditioned test imputation used the training-frame `material_class` index when mapping medians to test rows. That is not the intended test-row group mapping.
+Known original-code issue: class-conditioned test imputation used the training-frame `material_class` index when mapping medians to test rows. That was corrected in V2.
 
-**V2 action:** use sklearn pipelines for the baseline harness, then migrate original feature engineering into explicitly fitted train-fold transformers.
+Primary-study holdout exposed a second hidden edge case: a numerical feature can be entirely missing from all training studies in a fold. V2 now marks such a feature inactive and assigns a neutral constant in both train and held-out data; held-out values are never used to create an imputation statistic or activate a feature absent from training.
 
-### A3. Target-proxy leakage — BLOCKING
+### A3. Target-proxy leakage — RESOLVED FOR PRIMARY V2 FEATURE SET
 
 `removal_percent` can be mathematically linked to adsorption capacity (`qe`) through experimental mass-balance relationships when concentration, volume and dose are known. Using it as a predictor risks encoding the target.
 
-**V2 action:** exclude `removal_percent` from the primary predictive feature set. Any later sensitivity analysis including it must be clearly labelled non-primary and justified.
+**V2 action implemented:** `removal_percent` is excluded from the primary predictive feature set. Any later sensitivity analysis including it must be clearly labelled non-primary and justified.
 
 ### A4. External validation collapse — BLOCKING
 
@@ -45,22 +45,38 @@ Existing notebook outputs show severe performance collapse on two independent da
 
 Do not describe external validation as successful unless revised results support that claim.
 
-### A5. Constraint-vs-accuracy trade-off — MAJOR
+### A5. Constraint-vs-accuracy trade-off — BLOCKING / LEGACY QMAX INVALID
 
-The constraint-aware model currently trades predictive accuracy for reduced physical-bound violations. The scientific contribution should be expressed as a multi-objective trade-off unless future results establish predictive dominance.
+The constraint-aware model currently trades predictive accuracy for reduced physical-bound violations, but the underlying universal `Q_MAX = 624 mg/g` is contradicted by the corpus: 115/322 usable rows exceed 624 mg/g and the observed maximum is 2239 mg/g.
 
-**V2 action:** report predictive error, violation rate and perturbation stability jointly; avoid a generic "superior model" claim.
+**Disposition:** do not reintroduce the legacy constraint layer until the modelling domain is narrowed and any physical limits are derived conditionally for that domain.
 
 ### A6. Inverse-design claim strength — BLOCKING
 
 An optimiser finding an input at which the surrogate predicts the requested target demonstrates numerical inversion of the surrogate, not experimental attainment of that adsorption capacity.
 
-**V2 action:**
-- label outputs as candidate operating conditions;
+Primary-study holdout now adds a stronger blocker: the surrogate itself does not generalize reliably to unseen studies over the reconstructed heterogeneous domain.
+
+**V2 action required before any inverse-design claim:**
+- define a defensible applicability domain;
 - quantify predictive uncertainty;
 - penalise out-of-domain candidates;
-- use scaled/applicability-domain distance rather than unscaled Euclidean distance across incompatible units;
+- use scaled/nearest-neighbour, Mahalanobis or density-based distance rather than unscaled Euclidean distance across incompatible units;
+- label outputs as model-predicted candidate conditions rather than validated optima;
 - separate local surrogate stability from experimental robustness.
+
+### A7. Corpus scope / “agricultural waste” claim — BLOCKING
+
+Primary-source reconstruction shows that the training corpus is not exclusively agricultural-waste adsorbents. Confirmed examples include:
+- Maghara industrial mine coal (`MC350`–`MC600`);
+- textile sludge;
+- wastewater-sludge char;
+- commercial/mixed activated-carbon families including coal-based material;
+- refined white sugar;
+- crab shell;
+- agricultural residues and agro-industrial wastes.
+
+**Disposition:** the submitted title/domain phrase “using agricultural waste adsorbents” is materially broader/narrower than the actual corpus composition. A precursor-domain audit is required. Domain-restricted modelling may proceed only if enough independent primary studies remain for meaningful study-held-out validation.
 
 ## B. Manuscript ↔ code reconciliation — BLOCKING
 
@@ -72,6 +88,8 @@ The submitted manuscript and current notebooks appear to contain values from dif
 3. verify every manuscript number against that manifest;
 4. specifically investigate the submitted Table I ID-SEAD RMSE value reported as approximately 369.48 mg/g in the manuscript review notes;
 5. prohibit hand-edited table numbers in the revised manuscript.
+
+The final manuscript tables must use the revised study-aware results, not the legacy random-split values, unless the latter are explicitly labelled as a leakage-prone diagnostic comparator.
 
 ## C. IEEM manuscript-production defects — CONFIRMED/REPORTED
 
@@ -105,14 +123,29 @@ These should be repaired only after the new scientific results are locked.
 
 The revised scientific paper should not be treated as submission-ready until all gates below are satisfied:
 
-- [ ] zero study overlap in grouped folds;
-- [ ] all preprocessing proven fold-safe;
-- [ ] removal-percent target-proxy issue resolved;
-- [ ] grouped baseline metrics generated;
-- [ ] original ID-SEAD model rerun on identical grouped folds;
-- [ ] grouped uncertainty intervals generated;
+- [x] zero study overlap in current primary-study grouped folds;
+- [x] current validation preprocessing proven fold-safe, including all-missing training-fold handling;
+- [x] removal-percent target-proxy issue resolved for primary feature set;
+- [x] grouped baseline metrics generated;
+- [x] original feature-engineered model family rerun on primary-study grouped folds;
+- [x] provenance reconstructed for 238/251 inherited rows across 11 primary studies;
+- [ ] remaining `CS` primary provenance resolved or explicitly excluded permanently;
+- [ ] precursor/domain composition audited and manuscript scope corrected;
+- [ ] domain-restricted primary-study validation run if enough independent studies remain;
+- [ ] grouped uncertainty intervals generated for the final chosen domain/model;
 - [ ] external validation rerun and domain-shift diagnostics documented;
-- [ ] inverse-design applicability-domain/uncertainty layer implemented;
+- [ ] inverse-design applicability-domain/uncertainty layer implemented, if inverse design remains in scope;
 - [ ] deterministic manuscript result manifest generated;
 - [ ] Tables I–III reconciled to pipeline outputs;
 - [ ] manuscript production defects repaired after result lock.
+
+## F. Current scientific direction
+
+The submitted framing has **not** passed V2 validation. In particular:
+
+- stacking is not supported as a superior cross-study predictor;
+- the heterogeneous full corpus does not support broad unseen-study deployment;
+- the agricultural-waste-only title is not supported by confirmed provenance;
+- the legacy universal QMAX and inverse-design claims cannot currently be reinstated.
+
+The next decision depends on the precursor/domain audit. If a coherent agricultural/biomass-waste subset contains enough independent studies and shows credible primary-study transfer, the paper can narrow to that domain. If it does not, the stronger contribution is likely an applicability-domain/data-leakage/domain-shift study rather than a universal inverse-design model.
