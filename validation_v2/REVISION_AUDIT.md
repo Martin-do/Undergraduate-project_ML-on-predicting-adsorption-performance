@@ -55,17 +55,17 @@ The constraint-aware model currently trades predictive accuracy for reduced phys
 
 An optimiser finding an input at which the surrogate predicts the requested target demonstrates numerical inversion of the surrogate, not experimental attainment of that adsorption capacity.
 
-Primary-study holdout now adds a stronger blocker: the surrogate itself does not generalize reliably to unseen studies over the reconstructed heterogeneous domain.
+Primary-study holdout adds a stronger blocker: the surrogate does not generalize reliably to unseen studies over the heterogeneous domain.
 
-**V2 action required before any inverse-design claim:**
-- define a defensible applicability domain;
-- quantify predictive uncertainty;
-- penalise out-of-domain candidates;
-- use scaled/nearest-neighbour, Mahalanobis or density-based distance rather than unscaled Euclidean distance across incompatible units;
-- label outputs as model-predicted candidate conditions rather than validated optima;
-- separate local surrogate stability from experimental robustness.
+A training-only cross-study nearest-neighbour applicability audit has now also been completed. It is useful diagnostically but **fails as a sufficient acceptance/safety rule**:
+- broad-biogenic q95 support retains only ~11% of rows and rejects several low-error held-out studies;
+- waste-derived q95 support retains ~31% of rows;
+- the catastrophic Alshabib study is rejected in the broad-biogenic training domain but incorrectly classified as supported in the broader waste-derived domain;
+- distance-error association ranges from weak to moderate/strong depending on domain/model.
 
-### A7. Corpus scope / “agricultural waste” claim — BLOCKING
+**Disposition:** inverse design remains blocked. Distance can be retained as one diagnostic, but a group-aware uncertainty/residual-interval analysis is required before any domain-qualified inverse-design claim can be reconsidered.
+
+### A7. Corpus scope / “agricultural waste” claim — RESOLVED AS A DEFECT / ORIGINAL SCOPE FAILS
 
 Primary-source reconstruction shows that the training corpus is not exclusively agricultural-waste adsorbents. Confirmed examples include:
 - Maghara industrial mine coal (`MC350`–`MC600`);
@@ -76,7 +76,29 @@ Primary-source reconstruction shows that the training corpus is not exclusively 
 - crab shell;
 - agricultural residues and agro-industrial wastes.
 
-**Disposition:** the submitted title/domain phrase “using agricultural waste adsorbents” is materially broader/narrower than the actual corpus composition. A precursor-domain audit is required. Domain-restricted modelling may proceed only if enough independent primary studies remain for meaningful study-held-out validation.
+The explicit precursor audit finds:
+- strict agricultural waste: **65 rows / 4 primary studies**;
+- broad biogenic waste: **92 rows / 6 primary studies**;
+- waste-derived carbon: **138 rows / 7 primary studies**.
+
+Strict agricultural LOSO fails badly (RF R² ~-1.75; XGB ~-2.04), so filtering the corpus does not rescue the submitted title. Broad-biogenic XGB is the most encouraging restricted result (R² ~0.619), but remains unstable at the study level and has not passed uncertainty/applicability gates.
+
+**Disposition:** do not retain “agricultural waste adsorbents” as the general predictive scope of the submitted paper. Any new scope must follow the validated domain rather than the original title.
+
+### A8. Distance-driver audit — IN PROGRESS
+
+The applicability audit shows extreme standardized cross-study distances for some held-out studies (especially Li and Gao). Before interpreting those magnitudes, identify:
+- per-feature contributions to nearest-neighbour distance;
+- near-zero training variances that may amplify standardized differences;
+- which experimental descriptors create the domain separation.
+
+Do not tune the AD threshold before this audit is complete.
+
+### A9. Study-aware uncertainty — BLOCKING / NEXT GATE
+
+A group-aware residual-interval diagnostic must be calibrated using training studies only and evaluated on completely held-out primary studies. Because only 6–7 studies are available in the candidate domains and observations within a paper are dependent, do not claim formal exchangeable-conformal guarantees unless assumptions are actually justified.
+
+The intended output is empirical interval coverage, interval width and study-level failure behavior—not a cosmetic confidence band.
 
 ## B. Manuscript ↔ code reconciliation — BLOCKING
 
@@ -89,7 +111,7 @@ The submitted manuscript and current notebooks appear to contain values from dif
 4. specifically investigate the submitted Table I ID-SEAD RMSE value reported as approximately 369.48 mg/g in the manuscript review notes;
 5. prohibit hand-edited table numbers in the revised manuscript.
 
-The final manuscript tables must use the revised study-aware results, not the legacy random-split values, unless the latter are explicitly labelled as a leakage-prone diagnostic comparator.
+The final manuscript tables must use revised study-aware results, not legacy random-split values, unless the latter are explicitly labelled as leakage-prone diagnostics.
 
 ## C. IEEM manuscript-production defects — CONFIRMED/REPORTED
 
@@ -130,22 +152,30 @@ The revised scientific paper should not be treated as submission-ready until all
 - [x] original feature-engineered model family rerun on primary-study grouped folds;
 - [x] provenance reconstructed for 238/251 inherited rows across 11 primary studies;
 - [ ] remaining `CS` primary provenance resolved or explicitly excluded permanently;
-- [ ] precursor/domain composition audited and manuscript scope corrected;
-- [ ] domain-restricted primary-study validation run if enough independent studies remain;
-- [ ] grouped uncertainty intervals generated for the final chosen domain/model;
+- [x] precursor/domain composition audited;
+- [x] strict-agricultural scope tested and rejected as a general predictive framing;
+- [x] broad-biogenic and waste-derived study-held-out validation generated;
+- [x] training-only cross-study distance applicability diagnostic implemented;
+- [x] distance-only applicability gate shown insufficient for inverse design;
+- [ ] feature-level distance-driver audit completed;
+- [ ] grouped uncertainty/residual intervals generated and evaluated;
 - [ ] external validation rerun and domain-shift diagnostics documented;
-- [ ] inverse-design applicability-domain/uncertainty layer implemented, if inverse design remains in scope;
+- [ ] inverse-design uncertainty/applicability layer accepted, **or inverse-design framing explicitly abandoned**;
 - [ ] deterministic manuscript result manifest generated;
 - [ ] Tables I–III reconciled to pipeline outputs;
 - [ ] manuscript production defects repaired after result lock.
 
 ## F. Current scientific direction
 
-The submitted framing has **not** passed V2 validation. In particular:
+The submitted framing has **not** passed V2 validation.
 
-- stacking is not supported as a superior cross-study predictor;
+Current evidence supports these decisions:
+
+- stacking is not supported as a superior cross-study predictor and should not remain the central novelty;
 - the heterogeneous full corpus does not support broad unseen-study deployment;
-- the agricultural-waste-only title is not supported by confirmed provenance;
-- the legacy universal QMAX and inverse-design claims cannot currently be reinstated.
+- the agricultural-waste-only title is not supported and the strict agricultural subset itself performs poorly;
+- broad-biogenic XGB (LOSO R² ~0.619 across 6 studies) is a scientifically interesting restricted-domain result, but not yet a reliable deployment or inverse-design model;
+- the simple distance-only applicability rule does not provide adequate coverage or reliable failure detection;
+- the legacy universal QMAX cannot be reinstated.
 
-The next decision depends on the precursor/domain audit. If a coherent agricultural/biomass-waste subset contains enough independent studies and shows credible primary-study transfer, the paper can narrow to that domain. If it does not, the stronger contribution is likely an applicability-domain/data-leakage/domain-shift study rather than a universal inverse-design model.
+The next scientific gate is **study-aware uncertainty calibration plus feature-level OOD diagnosis**. If those do not provide reliable warning for high-error held-out studies, stop trying to rescue universal/domain-qualified inverse design and reframe the paper around study leakage, domain shift and applicability limits in literature-derived adsorption ML.
