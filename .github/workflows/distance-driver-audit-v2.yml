@@ -1,0 +1,51 @@
+name: Distance-driver audit V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/distance_driver_audit.py'
+      - 'validation_v2/applicability_domain_validation.py'
+      - 'validation_v2/adsorbent_domain_map.csv'
+      - 'validation_v2/primary_study_map.csv'
+      - 'validation_v2/primary_study_holdout_validation.py'
+      - 'validation_v2/feature_parity_validation.py'
+      - 'validation_v2/feature_parity_validation_fixed.py'
+      - 'validation_v2/study_aware_validation.py'
+      - 'final_final_adsorption_done_dataset.csv'
+      - '.github/workflows/distance-driver-audit-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  distance-drivers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy scikit-learn xgboost
+
+      - name: Run feature-level distance-driver audit
+        run: python validation_v2/distance_driver_audit.py
+
+      - name: Upload distance-driver evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: distance-driver-audit-v2-results
+          path: validation_v2/outputs/distance_driver_*
+          if-no-files-found: error
