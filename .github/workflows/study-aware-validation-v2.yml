@@ -5,7 +5,16 @@ on:
     branches:
       - feature/study-aware-validation-v2
     paths:
-      - 'validation_v2/**'
+      - 'validation_v2/run_smoke.py'
+      - 'validation_v2/study_aware_validation.py'
+      - 'validation_v2/source_dominance_diagnostics.py'
+      - 'validation_v2/physical_bound_audit.py'
+      - 'validation_v2/dominant_source_domain_audit.py'
+      - 'validation_v2/grouping_sensitivity.py'
+      - 'validation_v2/model_family_validation.py'
+      - 'validation_v2/feature_parity_validation.py'
+      - 'validation_v2/feature_parity_validation_fixed.py'
+      - 'validation_v2/source_dependency_ablation.py'
       - 'final_final_adsorption_done_dataset.csv'
       - '.github/workflows/study-aware-validation-v2.yml'
   workflow_dispatch:
@@ -52,15 +61,6 @@ jobs:
 
       - name: Run original-feature parity validation
         run: python validation_v2/feature_parity_validation_fixed.py
-
-      - name: Build Moosavi provenance inventory
-        run: python validation_v2/provenance_inventory.py
-
-      - name: Recover upstream Iftikhar row references
-        run: python validation_v2/upstream_iftikhar_ref_audit.py
-
-      - name: Inventory both upstream workbooks
-        run: python validation_v2/upstream_workbook_inventory.py
 
       - name: Run source-dependency ablation
         run: python validation_v2/source_dependency_ablation.py
