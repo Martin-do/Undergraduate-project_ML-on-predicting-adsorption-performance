@@ -44,6 +44,9 @@ jobs:
       - name: Run dominant-source domain audit
         run: python validation_v2/dominant_source_domain_audit.py
 
+      - name: Run grouping and target-scale sensitivity
+        run: python validation_v2/grouping_sensitivity.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
