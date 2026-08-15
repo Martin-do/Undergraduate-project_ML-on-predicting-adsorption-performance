@@ -50,6 +50,9 @@ jobs:
       - name: Run leakage-aware model-family validation
         run: python validation_v2/model_family_validation.py
 
+      - name: Run original-feature parity validation
+        run: python validation_v2/feature_parity_validation.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
