@@ -1,10 +1,12 @@
-"""Feature-level diagnosis of the Phase-5 cross-study applicability distances.
+"""Feature-level diagnosis of the corrected cross-study applicability distances.
 
-This script does not change the support rule. It explains it.
-For every LOSO fold and held-out row it identifies the k nearest training rows in
-the same training-standardized continuous space used by the applicability audit,
-then decomposes squared distance by feature. It also records training variance so
-very small/zero training spread cannot masquerade as unexplained domain shift.
+For every LOSO fold and held-out row this script identifies the k nearest training
+rows in the same training-standardized continuous space used by the applicability
+audit, then decomposes squared distance by ACTIVE feature.
+
+Candidate variables with zero/near-zero training variation are explicitly recorded
+but excluded from distance, because a training-constant variable has no empirical
+scale with which to normalize a held-out difference.
 """
 from __future__ import annotations
 
@@ -59,34 +61,36 @@ def main() -> None:
             xtr = prep.transform(raw.iloc[tr])
             xte = prep.transform(raw.iloc[te])
             names = list(prep.output_cols)
-            features = [f for f in ad.CONTINUOUS_SUPPORT_FEATURES if f in names]
-            idx = [names.index(f) for f in features]
+            features, idx, excluded = ad.select_variable_support_features(xtr, names)
+
+            # Record geometry for ALL candidate features so exclusions are auditable.
+            candidates = [f for f in ad.CONTINUOUS_SUPPORT_FEATURES if f in names]
+            for feat in candidates:
+                j_all = names.index(feat)
+                train_vals = xtr[:, j_all]
+                test_vals = xte[:, j_all]
+                train_std = float(np.std(train_vals, ddof=0))
+                fold_feature_rows.append({
+                    "subset": subset,
+                    "fold": fold,
+                    "held_out_study": held_out,
+                    "feature": feat,
+                    "active_in_distance": bool(feat in features),
+                    "excluded_training_constant": bool(feat in excluded),
+                    "train_mean_pre_support_scale": float(np.mean(train_vals)),
+                    "train_std_pre_support_scale": train_std,
+                    "train_min_pre_support_scale": float(np.min(train_vals)),
+                    "train_max_pre_support_scale": float(np.max(train_vals)),
+                    "test_min_pre_support_scale": float(np.min(test_vals)),
+                    "test_max_pre_support_scale": float(np.max(test_vals)),
+                    "inactive_in_parity_preprocessor": bool(feat in getattr(prep, "inactive_training_features", set())),
+                })
 
             support_input_train = xtr[:, idx]
             support_input_test = xte[:, idx]
             scaler = StandardScaler().fit(support_input_train)
             ztr = scaler.transform(support_input_train)
             zte = scaler.transform(support_input_test)
-
-            # Describe fold support geometry before inspecting target/prediction error.
-            for j, feat in enumerate(features):
-                train_vals = support_input_train[:, j]
-                test_vals = support_input_test[:, j]
-                fold_feature_rows.append({
-                    "subset": subset,
-                    "fold": fold,
-                    "held_out_study": held_out,
-                    "feature": feat,
-                    "train_mean_pre_support_scale": float(np.mean(train_vals)),
-                    "train_std_pre_support_scale": float(np.std(train_vals, ddof=0)),
-                    "support_scaler_scale": float(scaler.scale_[j]),
-                    "train_min_pre_support_scale": float(np.min(train_vals)),
-                    "train_max_pre_support_scale": float(np.max(train_vals)),
-                    "test_min_pre_support_scale": float(np.min(test_vals)),
-                    "test_max_pre_support_scale": float(np.max(test_vals)),
-                    "near_constant_train": bool(np.std(train_vals, ddof=0) < 1e-8),
-                    "inactive_in_parity_preprocessor": bool(feat in getattr(prep, "inactive_training_features", set())),
-                })
 
             held_feature_accumulator = {f: [] for f in features}
             held_fraction_accumulator = {f: [] for f in features}
@@ -143,25 +147,26 @@ def main() -> None:
     ).groupby(["subset", "held_out_study"], as_index=False).head(5)
     ranked.to_csv(OUT / "distance_driver_top5_by_study.csv", index=False)
 
-    near_constant = folds[folds["near_constant_train"] | folds["inactive_in_parity_preprocessor"]].copy()
-    near_constant.to_csv(OUT / "distance_driver_near_constant_training_features.csv", index=False)
+    excluded_df = folds[~folds["active_in_distance"]].copy()
+    excluded_df.to_csv(OUT / "distance_driver_excluded_training_constant_features.csv", index=False)
 
     audit = {
         "subsets": SUBSETS,
         "k_neighbors": K,
         "decomposition": "mean squared standardized difference to the k nearest training rows; fractions sum to one per held-out row",
-        "support_space": "same training-only continuous feature space as Phase 5 applicability audit",
+        "support_space": "corrected training-only continuous space used by applicability_domain_validation.py",
+        "constant_feature_rule": f"exclude when training std <= {ad.TRAIN_STD_MIN}",
         "targets_used_to_compute_distance": False,
-        "threshold_changed": False,
+        "threshold_changed_here": False,
     }
     (OUT / "distance_driver_audit.json").write_text(json.dumps(audit, indent=2), encoding="utf-8")
 
     print("=== DISTANCE DRIVER AUDIT ===")
     print(json.dumps(audit, indent=2))
-    print("\n=== TOP 5 DISTANCE DRIVERS BY HELD-OUT STUDY ===")
+    print("\n=== TOP 5 ACTIVE DISTANCE DRIVERS BY HELD-OUT STUDY ===")
     print(ranked.to_string(index=False))
-    print("\n=== NEAR-CONSTANT / INACTIVE TRAINING FEATURES ===")
-    print(near_constant.to_string(index=False) if len(near_constant) else "None")
+    print("\n=== EXCLUDED TRAINING-CONSTANT FEATURES ===")
+    print(excluded_df.to_string(index=False) if len(excluded_df) else "None")
 
 
 if __name__ == "__main__":
