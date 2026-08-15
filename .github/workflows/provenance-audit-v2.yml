@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install provenance dependency
+        run: pip install pandas
+
       - name: Build project provenance inventory
         run: python validation_v2/provenance_inventory.py
 
