@@ -41,6 +41,9 @@ jobs:
       - name: Inventory both upstream workbooks
         run: python validation_v2/upstream_workbook_inventory.py
 
+      - name: Inspect discarded upstream metadata
+        run: python validation_v2/upstream_hidden_metadata_audit.py
+
       - name: Upload provenance evidence
         if: always()
         uses: actions/upload-artifact@v4
