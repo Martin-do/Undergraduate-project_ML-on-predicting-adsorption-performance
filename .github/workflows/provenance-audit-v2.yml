@@ -50,6 +50,9 @@ jobs:
       - name: Extract unresolved experimental fingerprints
         run: python validation_v2/unresolved_upstream_signatures.py
 
+      - name: Audit unresolved workbook block context
+        run: python validation_v2/upstream_block_context.py
+
       - name: Build canonical provenance dataset
         run: python validation_v2/build_canonical_dataset.py
 
