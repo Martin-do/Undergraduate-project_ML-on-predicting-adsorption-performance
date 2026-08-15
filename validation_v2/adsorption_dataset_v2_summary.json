@@ -1,0 +1,28 @@
+{
+  "source_rows": 325,
+  "usable_target_rows_v2": 322,
+  "excluded_missing_target_rows": 3,
+  "iftikhar_inherited_rows": 251,
+  "confirmed_primary_rows": 238,
+  "confirmed_primary_studies": 11,
+  "unresolved_inherited_rows": 13,
+  "non_iftikhar_rows": 71,
+  "strict_agricultural_rows": 65,
+  "broad_biogenic_rows": 92,
+  "waste_derived_carbon_rows": 138,
+  "output_file": "validation_v2/outputs/adsorption_dataset_v2.csv",
+  "unresolved_inherited_adsorbents": [
+    "CS"
+  ],
+  "target_rule": "retain rows where qe_mg_g parses to a finite numeric value; no Q_MAX upper truncation",
+  "primary_analysis_scope": "238 confirmed Iftikhar-derived rows from 11 reconstructed primary studies",
+  "guardrails": [
+    "The original 325-row CSV is not modified.",
+    "All 322 usable-target rows remain in adsorption_dataset_v2.csv.",
+    "Iftikhar attribution is stored as a corrected secondary-source field; the legacy label is retained.",
+    "Unresolved rows retain blank primary-study IDs and explicit exclusion reasons.",
+    "Non-Iftikhar rows remain in the canonical dataset but are not silently treated as reconstructed primary studies.",
+    "Domain subsets are row-level eligibility flags, not destructive filters.",
+    "No Q_MAX=624 target or prediction truncation is applied."
+  ]
+}

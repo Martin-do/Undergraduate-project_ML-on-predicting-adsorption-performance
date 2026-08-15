@@ -1,0 +1,31 @@
+﻿column,description
+v2_row_id,Stable 1..N row identifier within adsorption_dataset_v2.csv.
+original_row_id,1-based row identifier in final_final_adsorption_done_dataset.csv before V2 target filtering.
+legacy_source_link,Original source_link retained verbatim for forensic traceability.
+source_scope_v2,Whether the row belongs to the inherited Iftikhar block or the non-Iftikhar remainder.
+secondary_source_id,Corrected secondary compilation identifier where established.
+secondary_source_citation,Corrected secondary-source citation where established.
+secondary_source_doi,Corrected secondary-source DOI where established.
+secondary_source_repository,Upstream reproducibility repository where established.
+secondary_source_workbook,Upstream workbook lineage where established.
+source_label_correction_status,Whether a legacy source attribution was corrected in V2 metadata.
+primary_study_id,Confirmed underlying primary-study identifier; blank if not reconstructed/confirmed.
+primary_study_citation,Confirmed primary-study citation.
+primary_study_doi,Confirmed primary-study DOI.
+primary_provenance_confidence,Confidence recorded by the reviewed provenance map.
+primary_provenance_status,confirmed / unresolved / not_reconstructed_non_iftikhar.
+primary_provenance_evidence,Evidence note supporting the primary-study assignment.
+provenance_tier_v2,"primary_confirmed, secondary_only_unresolved_primary, or source_not_reconstructed."
+pollutant_class_v2,Coarse pollutant class used for corpus/domain auditing.
+domain_class_v2,Reviewed precursor/material-domain class where mapped.
+domain_confidence_v2,Confidence of the precursor-domain classification.
+domain_note_v2,Human-readable reason for the precursor-domain classification.
+strict_agricultural_waste_v2,yes/no/unknown domain flag from the reviewed map.
+broad_biogenic_waste_v2,yes/no/unknown domain flag from the reviewed map.
+waste_derived_carbon_v2,yes/no/unknown domain flag from the reviewed map.
+analysis_eligible_full_corpus_v2,True for every row in this 322-row usable-target V2 file.
+analysis_eligible_confirmed_primary_v2,True only for inherited rows with confirmed primary-study provenance.
+analysis_eligible_strict_agricultural_v2,Confirmed-primary rows also classified as strict agricultural waste.
+analysis_eligible_broad_biogenic_v2,Confirmed-primary rows also classified as broad biogenic waste.
+analysis_eligible_waste_derived_carbon_v2,Confirmed-primary rows also classified as waste-derived carbon.
+confirmed_primary_exclusion_reason_v2,Reason a row is excluded from strict confirmed-primary analysis.
