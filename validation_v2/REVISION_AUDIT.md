@@ -32,38 +32,46 @@ Primary-study holdout exposed a second hidden edge case: a numerical feature can
 
 **V2 action implemented:** `removal_percent` is excluded from the primary predictive feature set. Any later sensitivity analysis including it must be clearly labelled non-primary and justified.
 
-### A4. External validation collapse — BLOCKING
+### A4. External validation collapse — BLOCKING / NEXT REPRODUCIBILITY GATE
 
 Existing notebook outputs show severe performance collapse on two independent datasets, with strongly negative R² values and high feasibility-violation rates.
 
-**V2 action:** retain these failures as evidence. Diagnose:
+Legacy evidence to preserve:
+- Shen dataset: R² ≈ **-18.786**, RMSE ≈ **696.09 mg/g**, legacy feasibility violation ≈ **45.71%**;
+- Jaffari dataset: R² ≈ **-16.097**, RMSE ≈ **303.55 mg/g**, legacy feasibility violation ≈ **61.75%**.
+
+**V2 action now required:** reproduce the external datasets and rerun them through the clean, unconstrained V2 predictive pipeline where source variables permit. Diagnose:
 - feature coverage mismatch;
 - material/pollutant domain shift;
 - missing-variable imputation burden;
 - target/range shift;
+- categorical novelty;
 - distance from the training applicability domain.
 
-Do not describe external validation as successful unless revised results support that claim.
+Do not describe external validation as successful unless revised results support that claim. The old failures are evidence and must not be removed if the new pipeline also performs poorly.
 
 ### A5. Constraint-vs-accuracy trade-off — BLOCKING / LEGACY QMAX INVALID
 
 The constraint-aware model currently trades predictive accuracy for reduced physical-bound violations, but the underlying universal `Q_MAX = 624 mg/g` is contradicted by the corpus: 115/322 usable rows exceed 624 mg/g and the observed maximum is 2239 mg/g.
 
-**Disposition:** do not reintroduce the legacy constraint layer until the modelling domain is narrowed and any physical limits are derived conditionally for that domain.
+**Disposition:** the legacy universal constraint layer is retired from the revised scientific framing. Any future physical limit would need to be conditional on a separately justified material/pollutant domain; none is currently established strongly enough to support the submitted inverse-design claim.
 
-### A6. Inverse-design claim strength — BLOCKING
+### A6. Inverse-design claim — FAILED / ABANDONED FOR REVISED PAPER
 
 An optimiser finding an input at which the surrogate predicts the requested target demonstrates numerical inversion of the surrogate, not experimental attainment of that adsorption capacity.
 
-Primary-study holdout adds a stronger blocker: the surrogate does not generalize reliably to unseen studies over the heterogeneous domain.
+The sequential V2 reliability gates now provide enough evidence to make a final disposition:
 
-A training-only cross-study nearest-neighbour applicability audit has now also been completed. It is useful diagnostically but **fails as a sufficient acceptance/safety rule**:
-- broad-biogenic q95 support retains only ~11% of rows and rejects several low-error held-out studies;
-- waste-derived q95 support retains ~31% of rows;
-- the catastrophic Alshabib study is rejected in the broad-biogenic training domain but incorrectly classified as supported in the broader waste-derived domain;
-- distance-error association ranges from weak to moderate/strong depending on domain/model.
+- primary-study holdout shows poor full-domain transfer;
+- stacking is not superior to the best tree model;
+- the legacy universal QMAX is contradicted by the observed corpus;
+- strict agricultural-waste LOSO fails;
+- broader biogenic/waste-derived domains improve average prediction but retain complete-study failures;
+- corrected cross-study distance does not reliably rank prediction error;
+- study-aware residual intervals are extremely wide and still miss the catastrophic Alshabib study;
+- RF and XGB can closely agree while both are wrong by >1500 mg/g.
 
-**Disposition:** inverse design remains blocked. Distance can be retained as one diagnostic, but a group-aware uncertainty/residual-interval analysis is required before any domain-qualified inverse-design claim can be reconsidered.
+**Disposition:** inverse design is **abandoned as a validated engineering contribution for the revised paper**. The historical optimizer may remain in the repository as a numerical demonstration, but it must not be presented as a validated design/optimization result.
 
 ### A7. Corpus scope / “agricultural waste” claim — RESOLVED AS A DEFECT / ORIGINAL SCOPE FAILS
 
@@ -81,37 +89,56 @@ The explicit precursor audit finds:
 - broad biogenic waste: **92 rows / 6 primary studies**;
 - waste-derived carbon: **138 rows / 7 primary studies**.
 
-Strict agricultural LOSO fails badly (RF R² ~-1.75; XGB ~-2.04), so filtering the corpus does not rescue the submitted title. Broad-biogenic XGB is the most encouraging restricted result (R² ~0.619), but remains unstable at the study level and has not passed uncertainty/applicability gates.
+Strict agricultural LOSO fails badly (RF R² ~-1.75; XGB ~-2.04), so filtering the corpus does not rescue the submitted title. Broad-biogenic XGB is the most encouraging restricted result (R² ~0.619 across six studies), but one complete held-out study fails catastrophically.
 
-**Disposition:** do not retain “agricultural waste adsorbents” as the general predictive scope of the submitted paper. Any new scope must follow the validated domain rather than the original title.
+**Disposition:** do not retain “agricultural waste adsorbents” as the general predictive scope of the submitted paper. Any new scope must follow the validated evidence rather than the original title.
 
-### A8. Distance-driver audit — IN PROGRESS
+### A8. Corrected distance/applicability-domain audit — COMPLETED / FAIL AS RELIABILITY GATE
 
-The applicability audit shows extreme standardized cross-study distances for some held-out studies (especially Li and Gao). Before interpreting those magnitudes, identify:
-- per-feature contributions to nearest-neighbour distance;
-- near-zero training variances that may amplify standardized differences;
-- which experimental descriptors create the domain separation.
+The first AD implementation exposed giant distances for Li/Gao because `contact_time_min` was constant in their training folds. A constant training feature has no empirical variance; retaining its held-out difference mixed original units into the standardized Euclidean distance.
 
-Do not tune the AD threshold before this audit is complete.
+V2 corrected the metric by excluding fold-constant/near-constant continuous variables from distance. After correction:
 
-### A9. Study-aware uncertainty — BLOCKING / NEXT GATE
+- broad-biogenic XGB distance-vs-error Spearman ≈ **-0.068**;
+- waste-derived-carbon XGB distance-vs-error Spearman ≈ **-0.283**;
+- broad-biogenic strict-q95 retained ~61.96% of rows and had aggregate R² ~0.694, but rejected low-error Archin/Ravenni studies as unsupported;
+- waste-derived strict-q95 retained ~64.49% and **worsened** XGB error;
+- catastrophic Alshabib is considered supported in the broader waste-derived domain.
 
-A group-aware residual-interval diagnostic must be calibrated using training studies only and evaluated on completely held-out primary studies. Because only 6–7 studies are available in the candidate domains and observations within a paper are dependent, do not claim formal exchangeable-conformal guarantees unless assumptions are actually justified.
+Feature decomposition confirms genuine study-specific covariate shifts (pyrolysis temperature, particle size, pH, temperature, pore/surface descriptors), but no universal distance direction predicts error reliably.
 
-The intended output is empirical interval coverage, interval width and study-level failure behavior—not a cosmetic confidence band.
+**Disposition:** retain corrected distance only as a domain-shift diagnostic, not a deployment/inverse-design acceptance rule.
+
+### A9. Study-aware uncertainty — COMPLETED / FAIL AS RELIABILITY GATE
+
+V2 implemented empirical group-aware residual intervals using only outer-training studies for calibration, with inner leave-one-primary-study-out residuals and equal total calibration weight per study. No formal conformal guarantee is claimed because the domains contain only 6–7 heterogeneous studies and within-study rows are dependent.
+
+Broad-biogenic fixed intervals:
+- nominal 90%: row coverage **97.83%**, equal-study coverage **83.33%**, mean width **~2958 mg/g**;
+- nominal 95%: row coverage **97.83%**, equal-study coverage **83.33%**, mean width **~3038 mg/g**;
+- Alshabib remains **0% covered** despite the extreme widths.
+
+Waste-derived fixed intervals:
+- nominal 90%: row coverage **98.55%**, equal-study coverage **85.71%**, mean width **~2920 mg/g**;
+- nominal 95%: row coverage **98.55%**, equal-study coverage **85.71%**, mean width **~3041 mg/g**;
+- Alshabib again remains **0% covered**.
+
+RF–XGB-disagreement scaling is worse: broad-biogenic mean interval width grows to ~13,000 mg/g while Alshabib remains uncovered. In that failure fold RF and XGB disagree by only ~5.5 mg/g while both are wrong by ~1533 mg/g.
+
+**Disposition:** the available study-aware uncertainty signals are too uninformative for engineering deployment or inverse optimization. This closes the inverse-design rescue attempt.
 
 ## B. Manuscript ↔ code reconciliation — BLOCKING
 
 The submitted manuscript and current notebooks appear to contain values from different pipeline stages.
 
 **Required:**
-1. generate Tables I–III directly from one deterministic validation pipeline;
+1. generate the revised result tables directly from one deterministic validation pipeline;
 2. create a machine-readable result manifest (metric, value, unit, dataset/split, code version);
 3. verify every manuscript number against that manifest;
 4. specifically investigate the submitted Table I ID-SEAD RMSE value reported as approximately 369.48 mg/g in the manuscript review notes;
 5. prohibit hand-edited table numbers in the revised manuscript.
 
-The final manuscript tables must use revised study-aware results, not legacy random-split values, unless the latter are explicitly labelled as leakage-prone diagnostics.
+The final manuscript must use revised study-aware results. Legacy random-split values may appear only when explicitly labelled as leakage-prone diagnostic comparators.
 
 ## C. IEEM manuscript-production defects — CONFIRMED/REPORTED
 
@@ -125,7 +152,7 @@ These issues do not determine scientific validity but must be fixed in any revis
 - submitted conference layout reportedly not in standard IEEE double-column form;
 - table/text justification and general IEEE formatting need correction.
 
-These should be repaired only after the new scientific results are locked.
+These should be repaired only after the revised scientific results are locked.
 
 ## D. Reviewer disposition
 
@@ -139,11 +166,11 @@ These should be repaired only after the new scientific results are locked.
 
 ### Reviewer 4
 
-**Disposition:** mixed/weakly supported. "No related references" conflicts with the submitted paper's reference list; "does not relate to engineering" is not a defensible description of adsorption/process optimisation. However, "basic" cannot simply be dismissed by listing sophisticated components: the validation design must demonstrate a robust contribution.
+**Disposition:** mixed/weakly supported. “No related references” conflicts with the submitted paper's reference list; “does not relate to engineering” is not a defensible description of adsorption/process modelling. However, “basic” cannot simply be dismissed by listing sophisticated components: the validation design must demonstrate a robust contribution.
 
 ## E. Acceptance gates for V2
 
-The revised scientific paper should not be treated as submission-ready until all gates below are satisfied:
+The revised scientific paper should not be treated as submission-ready until all remaining gates are satisfied:
 
 - [x] zero study overlap in current primary-study grouped folds;
 - [x] current validation preprocessing proven fold-safe, including all-missing training-fold handling;
@@ -155,27 +182,32 @@ The revised scientific paper should not be treated as submission-ready until all
 - [x] precursor/domain composition audited;
 - [x] strict-agricultural scope tested and rejected as a general predictive framing;
 - [x] broad-biogenic and waste-derived study-held-out validation generated;
-- [x] training-only cross-study distance applicability diagnostic implemented;
-- [x] distance-only applicability gate shown insufficient for inverse design;
-- [ ] feature-level distance-driver audit completed;
-- [ ] grouped uncertainty/residual intervals generated and evaluated;
+- [x] corrected training-only cross-study distance diagnostic implemented;
+- [x] feature-level distance-driver audit completed;
+- [x] distance-only applicability gate shown insufficient;
+- [x] group-aware residual intervals generated and evaluated;
+- [x] uncertainty gate shown insufficient;
+- [x] inverse-design framing explicitly abandoned for revised paper;
 - [ ] external validation rerun and domain-shift diagnostics documented;
-- [ ] inverse-design uncertainty/applicability layer accepted, **or inverse-design framing explicitly abandoned**;
 - [ ] deterministic manuscript result manifest generated;
-- [ ] Tables I–III reconciled to pipeline outputs;
+- [ ] revised scientific scope/title locked;
+- [ ] Tables/results reconciled to pipeline outputs;
 - [ ] manuscript production defects repaired after result lock.
 
 ## F. Current scientific direction
 
-The submitted framing has **not** passed V2 validation.
+The submitted framing has **not** passed V2 validation, and the attempt to rescue it as a reliable inverse-design method is closed.
+
+The strongest defensible revised contribution is now a study on **provenance, study leakage, domain shift and applicability limits in literature-derived adsorption machine learning**. The model comparison becomes supporting evidence rather than the novelty claim.
 
 Current evidence supports these decisions:
 
-- stacking is not supported as a superior cross-study predictor and should not remain the central novelty;
+- stacking should not remain the title or central novelty;
+- inverse design should not remain a validated engineering claim;
 - the heterogeneous full corpus does not support broad unseen-study deployment;
-- the agricultural-waste-only title is not supported and the strict agricultural subset itself performs poorly;
-- broad-biogenic XGB (LOSO R² ~0.619 across 6 studies) is a scientifically interesting restricted-domain result, but not yet a reliable deployment or inverse-design model;
-- the simple distance-only applicability rule does not provide adequate coverage or reliable failure detection;
+- the agricultural-waste-only title is not supported and the strict agricultural subset performs poorly;
+- broad-biogenic XGB (LOSO R² ~0.619 across six studies) is an informative restricted-domain diagnostic, not evidence of universal reliability;
+- simple distance and RF–XGB disagreement do not provide dependable failure detection;
 - the legacy universal QMAX cannot be reinstated.
 
-The next scientific gate is **study-aware uncertainty calibration plus feature-level OOD diagnosis**. If those do not provide reliable warning for high-error held-out studies, stop trying to rescue universal/domain-qualified inverse design and reframe the paper around study leakage, domain shift and applicability limits in literature-derived adsorption ML.
+**Next work:** reproduce the external datasets/failures under V2, document the corresponding domain shift, build a deterministic result manifest, and then lock the revised paper title/scope before rewriting the manuscript.
