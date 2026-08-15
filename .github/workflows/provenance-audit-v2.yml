@@ -7,7 +7,9 @@ on:
     paths:
       - 'validation_v2/provenance_*.py'
       - 'validation_v2/upstream_*.py'
+      - 'validation_v2/build_canonical_dataset.py'
       - 'validation_v2/*provenance*.csv'
+      - 'validation_v2/primary_study_map.csv'
       - 'final_final_adsorption_done_dataset.csv'
       - '.github/workflows/provenance-audit-v2.yml'
   workflow_dispatch:
@@ -43,6 +45,9 @@ jobs:
 
       - name: Inspect discarded upstream metadata
         run: python validation_v2/upstream_hidden_metadata_audit.py
+
+      - name: Build canonical provenance dataset
+        run: python validation_v2/build_canonical_dataset.py
 
       - name: Upload provenance evidence
         if: always()
