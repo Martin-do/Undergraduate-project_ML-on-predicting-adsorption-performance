@@ -6,6 +6,7 @@ on:
       - feature/study-aware-validation-v2
     paths:
       - 'validation_v2/external_validation_inventory.py'
+      - 'validation_v2/reconcile_legacy_liu_rowcount.py'
       - '*.ipynb'
       - '*.xlsx'
       - '*.xls'
@@ -36,10 +37,15 @@ jobs:
       - name: Inventory notebooks and data assets
         run: python validation_v2/external_validation_inventory.py
 
+      - name: Reconcile legacy Liu row count
+        run: python validation_v2/reconcile_legacy_liu_rowcount.py
+
       - name: Upload external lineage evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: external-validation-inventory-v2-results
-          path: validation_v2/outputs/external_validation_*
+          path: |
+            validation_v2/outputs/external_validation_*
+            validation_v2/outputs/legacy_liu_*
           if-no-files-found: error
