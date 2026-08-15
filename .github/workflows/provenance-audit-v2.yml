@@ -7,6 +7,7 @@ on:
     paths:
       - 'validation_v2/provenance_*.py'
       - 'validation_v2/upstream_*.py'
+      - 'validation_v2/unresolved_upstream_signatures.py'
       - 'validation_v2/build_canonical_dataset.py'
       - 'validation_v2/*provenance*.csv'
       - 'validation_v2/primary_study_map.csv'
@@ -45,6 +46,9 @@ jobs:
 
       - name: Inspect discarded upstream metadata
         run: python validation_v2/upstream_hidden_metadata_audit.py
+
+      - name: Extract unresolved experimental fingerprints
+        run: python validation_v2/unresolved_upstream_signatures.py
 
       - name: Build canonical provenance dataset
         run: python validation_v2/build_canonical_dataset.py
