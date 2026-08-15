@@ -32,8 +32,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy pandas scikit-learn xgboost
 
-      - name: Run study-aware validation
-        run: python validation_v2/study_aware_validation.py
+      - name: Run study-aware diagnostic validation
+        run: python validation_v2/run_diagnostic.py
 
       - name: Upload validation evidence
         if: always()
