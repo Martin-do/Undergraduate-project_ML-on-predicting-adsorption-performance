@@ -35,6 +35,9 @@ jobs:
       - name: Run study-aware smoke validation
         run: python validation_v2/run_smoke.py
 
+      - name: Run source-dominance diagnostics
+        run: python validation_v2/source_dominance_diagnostics.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
