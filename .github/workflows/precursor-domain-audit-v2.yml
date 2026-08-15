@@ -1,0 +1,49 @@
+name: Precursor-domain audit V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/adsorbent_domain_map.csv'
+      - 'validation_v2/primary_study_map.csv'
+      - 'validation_v2/precursor_domain_audit.py'
+      - 'validation_v2/study_aware_validation.py'
+      - 'final_final_adsorption_done_dataset.csv'
+      - '.github/workflows/precursor-domain-audit-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-domain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependency
+        run: pip install pandas numpy
+
+      - name: Run precursor-domain audit
+        run: python validation_v2/precursor_domain_audit.py
+
+      - name: Upload domain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: precursor-domain-audit-v2-results
+          path: |
+            validation_v2/outputs/inherited_rows_with_domain_class.csv
+            validation_v2/outputs/precursor_domain_*.csv
+            validation_v2/outputs/precursor_domain_audit_summary.json
+            validation_v2/outputs/primary_study_domain_composition.csv
+          if-no-files-found: error
