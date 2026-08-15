@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   provenance:
@@ -56,6 +56,21 @@ jobs:
 
       - name: Build canonical 322-row V2 dataset
         run: python validation_v2/build_canonical_dataset.py
+
+      - name: Publish canonical dataset files on validation branch
+        run: |
+          cp validation_v2/outputs/adsorption_dataset_v2.csv validation_v2/adsorption_dataset_v2.csv
+          cp validation_v2/outputs/adsorption_dataset_v2_data_dictionary.csv validation_v2/adsorption_dataset_v2_data_dictionary.csv
+          cp validation_v2/outputs/adsorption_dataset_v2_summary.json validation_v2/adsorption_dataset_v2_summary.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add validation_v2/adsorption_dataset_v2.csv validation_v2/adsorption_dataset_v2_data_dictionary.csv validation_v2/adsorption_dataset_v2_summary.json
+          if git diff --cached --quiet; then
+            echo "Canonical V2 dataset is already up to date."
+          else
+            git commit -m "data: publish canonical adsorption dataset v2"
+            git push origin HEAD:feature/study-aware-validation-v2
+          fi
 
       - name: Upload provenance evidence and canonical dataset
         if: always()
