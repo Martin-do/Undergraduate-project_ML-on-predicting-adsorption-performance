@@ -1,0 +1,45 @@
+name: External-validation inventory V2
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/external_validation_inventory.py'
+      - '*.ipynb'
+      - '*.xlsx'
+      - '*.xls'
+      - '*.csv'
+      - '.github/workflows/external-validation-inventory-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory-external:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install workbook dependencies
+        run: pip install pandas openpyxl xlrd
+
+      - name: Inventory notebooks and data assets
+        run: python validation_v2/external_validation_inventory.py
+
+      - name: Upload external lineage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-validation-inventory-v2-results
+          path: validation_v2/outputs/external_validation_*
+          if-no-files-found: error
