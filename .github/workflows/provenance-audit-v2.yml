@@ -11,6 +11,7 @@ on:
       - 'validation_v2/build_canonical_dataset.py'
       - 'validation_v2/*provenance*.csv'
       - 'validation_v2/primary_study_map.csv'
+      - 'validation_v2/adsorbent_domain_map.csv'
       - 'final_final_adsorption_done_dataset.csv'
       - '.github/workflows/provenance-audit-v2.yml'
   workflow_dispatch:
@@ -53,10 +54,10 @@ jobs:
       - name: Audit unresolved workbook block context
         run: python validation_v2/upstream_block_context.py
 
-      - name: Build canonical provenance dataset
+      - name: Build canonical 322-row V2 dataset
         run: python validation_v2/build_canonical_dataset.py
 
-      - name: Upload provenance evidence
+      - name: Upload provenance evidence and canonical dataset
         if: always()
         uses: actions/upload-artifact@v4
         with:
