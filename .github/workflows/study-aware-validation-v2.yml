@@ -41,6 +41,9 @@ jobs:
       - name: Run physical-bound consistency audit
         run: python validation_v2/physical_bound_audit.py
 
+      - name: Run dominant-source domain audit
+        run: python validation_v2/dominant_source_domain_audit.py
+
       - name: Upload validation evidence
         if: always()
         uses: actions/upload-artifact@v4
