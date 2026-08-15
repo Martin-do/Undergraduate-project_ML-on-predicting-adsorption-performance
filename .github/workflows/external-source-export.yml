@@ -1,0 +1,25 @@
+name: Export external source workbooks
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - '.github/workflows/external-source-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: external-source-workbooks
+          path: |
+            Biochar_dye_filtered.xlsx
+            Raw_data.xlsx
+          if-no-files-found: error
