@@ -1,0 +1,26 @@
+name: Export manuscript source for V2 rewrite
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - '.github/workflows/manuscript-source-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-manuscript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload rejected manuscript source
+        uses: actions/upload-artifact@v4
+        with:
+          name: rejected-ieem-manuscript-source
+          path: ID_SEAD_IEEM2026_v4.docx
+          if-no-files-found: error
