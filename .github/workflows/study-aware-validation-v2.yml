@@ -56,6 +56,9 @@ jobs:
       - name: Build Moosavi provenance inventory
         run: python validation_v2/provenance_inventory.py
 
+      - name: Recover upstream Iftikhar row references
+        run: python validation_v2/upstream_iftikhar_ref_audit.py
+
       - name: Run source-dependency ablation
         run: python validation_v2/source_dependency_ablation.py
 
