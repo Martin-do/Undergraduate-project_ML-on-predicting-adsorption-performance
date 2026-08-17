@@ -1,0 +1,20 @@
+legacy_source_contains,adsorbent_selector,matched_rows,status
+"Schneider et al., 2022",*,11,confirmed_primary
+"Ajien et al., 2023",*,2,review_derived_unresolved
+"Igwegbe et al., 2021",*,9,confirmed_primary
+"Hameed, 2009",*,1,confirmed_primary
+"Abul Hossain & Hossain, 2014",*,1,confirmed_primary
+"Mohamed & Rahman, 2013",*,1,confirmed_primary
+"Yang & Cui, 2013",*,1,confirmed_primary
+"Hadi, 2012",*,1,confirmed_primary
+"Rafie, 2012",*,1,confirmed_primary
+"Sulyman et al., 2017 review",RH-MB,1,confirmed_primary_recovered_from_review
+"Sulyman et al., 2017 review",RH-IC,1,confirmed_primary_recovered_from_review
+"Sulyman et al., 2017 review",OP-Pb,1,confirmed_primary_recovered_from_review
+"Sulyman et al., 2017 review",OliveS-Phenol,1,confirmed_primary_recovered_from_review
+"Sulyman et al., 2017 review",MR-Cd,1,confirmed_primary_recovered_from_review
+"Kuok et al., 2024",*,20,confirmed_primary
+"Abubakar et al., 2025",*,6,confirmed_primary
+"Sukmana et al., 2025",*,4,confirmed_primary
+"Gargiulo et al., 2024",*,6,confirmed_primary
+"Chong & Hadibarata, 2021",*,2,confirmed_primary

@@ -1,0 +1,39 @@
+{
+  "rows": 322,
+  "primary_confirmed_rows": 307,
+  "primary_confirmed_studies": 29,
+  "unresolved_rows": 15,
+  "strict_comparable_rows": 273,
+  "strict_comparable_studies": 24,
+  "v2_baseline_confirmed_rows": 238,
+  "newly_primary_reconstructed_non_iftikhar_rows": 69,
+  "remaining_unresolved_breakdown": {
+    "iftikhar_CS": 13,
+    "Ajien_review_composite": 2
+  },
+  "strict_comparable_excluded_but_primary_confirmed_rows": 34,
+  "method_field_conflict_rows": 3,
+  "target_comparability_counts": {
+    "conventional_aqueous_adsorption_capacity": 267,
+    "bulk_water_quality_derived_uptake": 20,
+    "unresolved": 13,
+    "nonaqueous_oil_quality_derived_uptake": 11,
+    "aqueous_operational_uptake": 9,
+    "unresolved_composite_target": 2
+  },
+  "record_granularity_counts": {
+    "experimental_condition": 288,
+    "study_summary_qmax": 17,
+    "unresolved": 13,
+    "review_composite": 2,
+    "study_summary_or_endpoint": 2
+  },
+  "guardrails": [
+    "Frozen adsorption_dataset_v2.csv is not modified.",
+    "A recovered citation does not automatically make a row modelling-eligible.",
+    "Ajien review-composite rows remain primary-unresolved.",
+    "Three Sulyman-derived rows with processing-field conflicts are primary-traceable but excluded from strict-comparable validation until corrected.",
+    "Schneider oil-acidity and Kuok bulk-water-quality targets are retained but excluded from conventional-aqueous-capacity validation.",
+    "No Q_MAX=624 filtering is applied."
+  ]
+}
