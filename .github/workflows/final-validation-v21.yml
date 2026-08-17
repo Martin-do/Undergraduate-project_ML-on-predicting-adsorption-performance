@@ -1,0 +1,46 @@
+name: Final validation V2.1
+
+on:
+  push:
+    branches:
+      - feature/study-aware-validation-v2
+    paths:
+      - 'validation_v2/build_dataset_v21.py'
+      - 'validation_v2/non_iftikhar_primary_source_map_v21.csv'
+      - 'validation_v2/final_validation_v21.py'
+      - 'validation_v2/adsorption_dataset_v2.csv'
+      - 'validation_v2/primary_study_map.csv'
+      - 'validation_v2/feature_parity_validation*.py'
+      - 'validation_v2/study_aware_validation.py'
+      - '.github/workflows/final-validation-v21.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install numpy pandas scipy scikit-learn xgboost
+      - name: Run final V2.1 validation
+        run: python validation_v2/final_validation_v21.py
+      - name: Upload V2.1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-validation-v21-results
+          path: |
+            validation_v2/outputs/adsorption_dataset_v2_1.csv
+            validation_v2/outputs/adsorption_dataset_v2_1_summary.json
+            validation_v2/outputs/non_iftikhar_v21_match_audit.csv
+            validation_v2/outputs/final_validation_v21_*
+          if-no-files-found: error
