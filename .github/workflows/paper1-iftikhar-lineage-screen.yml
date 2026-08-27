@@ -1,0 +1,29 @@
+name: Paper 1 Iftikhar lineage screen
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'validation_v2/iftikhar_public_dyes_lineage_screen.py'
+      - '.github/workflows/paper1-iftikhar-lineage-screen.yml'
+  workflow_dispatch:
+
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pandas openpyxl requests
+      - name: Screen public Iftikhar workbook lineage
+        run: python validation_v2/iftikhar_public_dyes_lineage_screen.py
+      - name: Upload lineage evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-iftikhar-lineage-screen
+          path: validation_v2/outputs/multidataset/iftikhar_lineage_screen/
+          if-no-files-found: error
