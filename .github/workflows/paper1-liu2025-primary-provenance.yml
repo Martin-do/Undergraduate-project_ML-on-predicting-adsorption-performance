@@ -1,0 +1,30 @@
+name: Paper 1 Liu 2025 primary-study provenance
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'validation_v2/liu2025_primary_study_provenance.py'
+      - 'Biochar_dye_filtered.xlsx'
+      - '.github/workflows/paper1-liu2025-primary-provenance.yml'
+  workflow_dispatch:
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pandas openpyxl numpy
+      - name: Build provenance ledger
+        run: python validation_v2/liu2025_primary_study_provenance.py
+      - name: Upload provenance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-liu2025-primary-provenance
+          path: validation_v2/outputs/multidataset/liu2025_primary_provenance/
+          if-no-files-found: error
