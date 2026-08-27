@@ -12,7 +12,7 @@ Citation: Chong Liu et al., *Enhanced machine learning prediction of biochar ads
 
 - Literature data were collected from Web of Science, Google Scholar and Scopus using biochar/dye adsorption search terms.
 - The paper reports 43 varieties of biochar, 15 dye categories and 685 collected experimental datasets.
-- Seventeen high-Q rows were removed during preprocessing, yielding 668 modelling rows.
+- The paper states that 17 high-Q rows were removed during preprocessing, yielding 668 modelling rows.
 - The modelling data were randomly partitioned 80:20.
 - Five-fold cross-validation and evaluation across 1000 random train-test partitions are described.
 - CatBoost is reported as the best model with `R² = 0.9880` and `RMSE = 0.0839`; experimental validation is reported at `R² = 0.9037`.
@@ -25,13 +25,39 @@ The public repository contains `Biochar_dye_filtered.xlsx` plus model notebooks 
 
 The workbook is byte-identical at Git blob level to the `Biochar_dye_filtered.xlsx` copy already archived in the Martin project repository (`10514a9509ba37047f8b269bbd72f30c592d0c5d`).
 
-The V2 external-validation loader shows that the workbook contains at least three relevant sheets:
+### CI-verified public workbook screen
+
+A dedicated deterministic screening workflow was added on the Paper 1 replication branch and completed successfully:
+
+- GitHub Actions run: `33062243622`
+- conclusion: `success`
+- artifact: `paper1-liu2025-public-dataset-screen`
+- artifact ID: `9642197856`
+- artifact SHA-256: `952741b1d1bb4f4caee8147d4d52f150286d4cfd0cccad91ed6598ff691cde85`
+
+The workbook SHA-256 reported by CI is `2a7219c309fe09187e4c3e4ef7f55794051643570fe612fd7c2241a4cd16de11`.
+
+The workbook contains eight sheets:
 
 - `After preprocessing`
+- `PRE_KNN_filled`
+- `molar_ratio`
+- `pre_D_filled`
+- `pre_Free-ASH`
 - `original`
 - `literature collection`
+- `Experiment data`
 
-The processed modelling sheet does **not** preserve an explicit row-level biochar/source identity usable as a primary-study group. The V2 loader intentionally assigns the generic material label `biochar_external_unspecified` instead of manufacturing an identity. The literature list therefore needs to be reconciled back to row blocks before a primary-study-aware split is scientifically defensible.
+The first six literature-data processing sheets each contain **685 rows**, including `After preprocessing`. The `Experiment data` sheet contains 51 prospective experimental-validation cases.
+
+This exposes a reproducibility discrepancy requiring resolution: the article states that 17 outlier rows were removed to produce **668 modelling rows**, whereas the public `After preprocessing` sheet contains **685 rows** and the public model notebooks load `Biochar_dye_filtered.xlsx` without an additional 17-row filter. The matched replication must therefore distinguish the published 668-row claim from the public-code 685-row executable dataset rather than silently treating them as identical.
+
+The `literature collection` sheet contains **20 non-empty DOI entries**. However, neither `original` nor `After preprocessing` contains an explicit source, reference, DOI, paper or study column. The CI gate therefore records:
+
+- `explicit_row_level_source_identifier_found = false`
+- `grouping_ready_for_primary_study_cv = false`
+
+The V2 external-validation loader independently reached the same practical conclusion: the processed sheet does not preserve a row-level biochar/source identity, so it assigns the honest generic label `biochar_external_unspecified` rather than manufacturing a base-material identity.
 
 ### Reproducibility observations from public code
 
@@ -48,7 +74,7 @@ The final point means the public code appears to repeat the **same five shuffled
 
 **PROVISIONALLY ELIGIBLE, GROUPING NOT YET READY.**
 
-Next requirement: reconstruct row-to-primary-study or row-to-defensible experimental-source groups from the workbook literature collection and primary publications. No grouped metric will be generated before this mapping is established.
+Next requirement: reconstruct row-to-primary-study or row-to-defensible experimental-source groups from the 20-study literature collection and primary publications. Material-feature signatures may be used to assist reconciliation, but they will not be declared to be primary-study IDs without bibliographic evidence. No grouped metric will be generated before this mapping is established.
 
 ---
 
