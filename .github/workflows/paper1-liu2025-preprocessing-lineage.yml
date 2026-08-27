@@ -1,0 +1,30 @@
+name: Paper 1 Liu 2025 preprocessing lineage audit
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'validation_v2/liu2025_preprocessing_lineage_audit.py'
+      - 'Biochar_dye_filtered.xlsx'
+      - '.github/workflows/paper1-liu2025-preprocessing-lineage.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pandas openpyxl
+      - name: Audit preprocessing lineage
+        run: python validation_v2/liu2025_preprocessing_lineage_audit.py
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-liu2025-preprocessing-lineage
+          path: validation_v2/outputs/multidataset/liu2025_preprocessing_lineage/
+          if-no-files-found: error
