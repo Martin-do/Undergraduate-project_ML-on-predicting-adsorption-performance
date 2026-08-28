@@ -5,7 +5,7 @@ on:
     branches:
       - paper1/multidataset-study-aware-replication
     paths:
-      - 'paper1/manuscript/PAPER1_MANUSCRIPT_DRAFT_V1.md'
+      - 'paper1/manuscript/PAPER1_MANUSCRIPT_DRAFT_V2.md'
       - 'paper1/manuscript/TABLES_V1.md'
       - 'paper1/manuscript/reconcile_manuscript_numbers.py'
       - 'validation_v2/MULTIDATASET_RESULTS_REGISTRY.csv'
@@ -30,13 +30,13 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade pip pandas
 
-      - name: Reconcile manuscript numbers
+      - name: Reconcile manuscript numbers and wording
         run: python paper1/manuscript/reconcile_manuscript_numbers.py
 
       - name: Upload reconciliation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: paper1-manuscript-reconciliation-v1
+          name: paper1-manuscript-reconciliation-v2
           path: paper1/manuscript/reconciliation/
           if-no-files-found: error
