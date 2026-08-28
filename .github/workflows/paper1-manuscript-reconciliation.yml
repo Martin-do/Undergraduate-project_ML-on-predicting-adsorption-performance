@@ -1,0 +1,42 @@
+name: Paper 1 manuscript numerical reconciliation
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'paper1/manuscript/PAPER1_MANUSCRIPT_DRAFT_V1.md'
+      - 'paper1/manuscript/TABLES_V1.md'
+      - 'paper1/manuscript/reconcile_manuscript_numbers.py'
+      - 'validation_v2/MULTIDATASET_RESULTS_REGISTRY.csv'
+      - '.github/workflows/paper1-manuscript-reconciliation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pandas
+
+      - name: Reconcile manuscript numbers
+        run: python paper1/manuscript/reconcile_manuscript_numbers.py
+
+      - name: Upload reconciliation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-manuscript-reconciliation-v1
+          path: paper1/manuscript/reconciliation/
+          if-no-files-found: error
