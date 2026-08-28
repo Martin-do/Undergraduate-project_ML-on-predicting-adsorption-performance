@@ -1,0 +1,65 @@
+field_name,layer,data_type,unit_or_format,required_primary,predictor_status,description
+record_id,provenance,string,stable unique ID,yes,never predictor,Unique V3 row identifier
+primary_study_id,provenance,string,stable study ID,yes,never predictor,Primary publication/experimental study group used for GroupKFold
+lineage_cluster_id,provenance,string,stable lineage ID,no,never predictor,Links overlapping/reused experimental lineages across publications
+source_doi,provenance,string,DOI,no,never predictor,Primary source DOI
+source_title,provenance,string,text,yes,never predictor,Primary source title
+source_year,provenance,integer,year,yes,never predictor,Publication year retained for audit only
+source_table_figure,provenance,string,text,no,never predictor,Exact extraction location in primary source
+source_row_label,provenance,string,text,no,never predictor,Original row/sample label where available
+extraction_method,provenance,categorical,manual/supplement/code/other,yes,never predictor,How the observation entered V3
+extraction_confidence,provenance,categorical,high/medium/low,yes,never predictor,Confidence in row-level extraction
+provenance_confidence,provenance,categorical,high/medium/low,yes,never predictor,Confidence in primary-study assignment
+duplicate_status,provenance,categorical,unique/exact_duplicate/near_duplicate/possible_lineage,yes,never predictor,Duplicate and overlap audit status
+inclusion_status,provenance,categorical,include/exclude/sensitivity,yes,never predictor,Modelling eligibility flag
+exclusion_reason,provenance,string,text,no,never predictor,Reason excluded from primary population
+adsorbent_name,adsorbent,string,text,yes,categorical/encoded,Reported adsorbent/material name
+precursor_name,adsorbent,string,text,yes,categorical/encoded,Original biomass/mineral/material precursor
+precursor_class,adsorbent,categorical,controlled vocabulary,yes,candidate predictor,Harmonised precursor/feedstock class
+material_class,adsorbent,categorical,controlled vocabulary,yes,candidate predictor,Biochar activated carbon clay etc
+activation_type,adsorbent,categorical,none/physical/chemical/both/other,no,candidate predictor,Activation route
+activation_agent,adsorbent,categorical,controlled vocabulary,no,candidate predictor,Chemical/physical activation agent
+pyrolysis_temperature_c,adsorbent,float,C,no,candidate predictor,Carbonisation/pyrolysis temperature
+pyrolysis_residence_time_min,adsorbent,float,min,no,candidate predictor,Residence time during thermal preparation
+bet_surface_area_m2_g,adsorbent,float,m2/g,no,candidate predictor,BET surface area
+total_pore_volume_cm3_g,adsorbent,float,cm3/g,no,candidate predictor,Total pore volume
+mean_pore_size_nm,adsorbent,float,nm,no,candidate predictor,Mean/average pore size where semantically compatible
+ph_pzc,adsorbent,float,pH,no,candidate predictor,Point of zero charge
+ash_percent,adsorbent,float,%,no,candidate predictor,Ash content
+carbon_percent,adsorbent,float,%,no,candidate predictor,Elemental carbon
+hydrogen_percent,adsorbent,float,%,no,candidate predictor,Elemental hydrogen
+nitrogen_percent,adsorbent,float,%,no,candidate predictor,Elemental nitrogen
+oxygen_percent,adsorbent,float,%,no,candidate predictor,Elemental oxygen
+functional_group_summary,adsorbent,string,text,no,descriptive/not primary predictor,Raw reported functional-group annotation before reproducible encoding
+adsorbate_name,adsorbate,string,text,yes,categorical/encoded,Reported pollutant/adsorbate
+adsorbate_class,adsorbate,categorical,controlled vocabulary,yes,candidate predictor,Dye metal ammonium pharmaceutical etc
+canonical_smiles,adsorbate,string,SMILES,no,descriptor source only,Canonical structure used to generate molecular descriptors
+molecular_weight_g_mol,adsorbate,float,g/mol,no,candidate predictor,Molecular weight
+charge_class,adsorbate,categorical,cationic/anionic/neutral/zwitterionic/metal-ion/other,no,candidate predictor,Harmonised charge class
+pka_primary,adsorbate,float,pKa,no,candidate predictor,Primary relevant pKa where meaningful
+logp_or_logkow,adsorbate,float,dimensionless,no,candidate predictor,Hydrophobicity descriptor where meaningful
+topological_polar_surface_area_a2,adsorbate,float,A2,no,candidate predictor,Computed/referenced TPSA
+aromatic_ring_count,adsorbate,integer,count,no,candidate predictor,Computed aromatic ring count
+h_bond_donor_count,adsorbate,integer,count,no,candidate predictor,Hydrogen bond donors
+h_bond_acceptor_count,adsorbate,integer,count,no,candidate predictor,Hydrogen bond acceptors
+initial_concentration_mg_l,process,float,mg/L,yes,candidate predictor,Initial adsorbate concentration
+adsorbent_dose_g_l,process,float,g/L,yes,candidate predictor,Adsorbent dose normalised by solution volume
+ph,process,float,pH,yes,candidate predictor,Experimental solution pH
+temperature_c,process,float,C,yes,candidate predictor,Adsorption temperature
+contact_time_min,process,float,min,yes,candidate predictor,Contact/equilibration time
+solution_volume_ml,process,float,mL,no,candidate predictor,Experimental solution volume
+agitation_rpm,process,float,rpm,no,candidate predictor,Agitation speed
+ionic_strength_mol_l,process,float,mol/L,no,candidate predictor,Ionic strength where reported
+co_solute_summary,process,string,text,no,descriptive/not primary predictor,Coexisting ions/solutes before reproducible encoding
+experiment_mode,process,categorical,batch/column/other,yes,stratification variable,Primary analysis expected to use domain-consistent experiment mode
+equilibrium_status,process,categorical,equilibrium/terminal/intermediate/unclear,yes,stratification variable,Target-semantic eligibility flag
+qe_mg_g,target,float,mg/g,yes,target,Primary prediction target
+removal_percent,target_related,float,%,no,prohibited primary predictor,Target-related response retained for audit only
+qmax_langmuir_mg_g,target_related,float,mg/g,no,separate target only,Fitted Langmuir maximum capacity if reported
+qe_derivation,target_related,categorical,reported/calculated_from_mass_balance/other,yes,never predictor,How qe value was obtained
+raw_unit_qe,target_related,string,text,yes,never predictor,Original unit as reported before harmonisation
+unit_conversion_note,target_related,string,text,no,never predictor,Reproducible conversion record
+raw_missing_core_count,quality,integer,count,yes,diagnostic only,Count of missing core descriptors before imputation
+study_row_count,quality,integer,count,yes,never predictor,Total eligible rows from the primary study after freeze
+study_share_primary_population,quality,float,fraction,yes,never predictor,Study contribution share used to identify dominance
+notes,quality,string,text,no,never predictor,Audit notes
