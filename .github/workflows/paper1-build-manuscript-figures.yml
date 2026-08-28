@@ -1,5 +1,6 @@
 name: Paper 1 build manuscript figures
 
+# Deterministic renderer for the frozen representative evidence set.
 on:
   push:
     branches:
