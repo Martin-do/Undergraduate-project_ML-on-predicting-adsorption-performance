@@ -7,7 +7,7 @@ independent studies and descriptor coverage.
 from __future__ import annotations
 from pathlib import Path
 from io import BytesIO
-import json, re
+import json, re, zipfile
 import requests
 import pandas as pd
 
@@ -26,15 +26,32 @@ MDPI_CANDIDATES = [
 
 
 def get_bytes(url):
-    r = requests.get(url, timeout=60, headers=UA, allow_redirects=True)
-    return r
+    return requests.get(url, timeout=60, headers=UA, allow_redirects=True)
 
 
 def norm_doi(v):
-    if pd.isna(v): return None
+    if pd.isna(v):
+        return None
     s = str(v).strip().lower()
     s = s.replace("https://doi.org/", "").replace("http://doi.org/", "").replace("doi:", "").strip()
     return s or None
+
+
+def unwrap_excel_payload(payload: bytes):
+    """Return XLSX bytes from either a direct XLSX or an outer ZIP containing XLSX."""
+    if payload[:2] != b"PK":
+        return None, "not_zip_or_xlsx"
+    z = zipfile.ZipFile(BytesIO(payload))
+    names = z.namelist()
+    # An XLSX is itself a ZIP with xl/ and [Content_Types].xml.
+    if "[Content_Types].xml" in names and any(n.startswith("xl/") for n in names):
+        return payload, "direct_xlsx"
+    xlsx_names = [n for n in names if n.lower().endswith((".xlsx", ".xlsm")) and not n.startswith("__MACOSX/")]
+    if xlsx_names:
+        # Prefer the largest workbook when a supplement bundle contains multiple files.
+        chosen = max(xlsx_names, key=lambda n: z.getinfo(n).file_size)
+        return z.read(chosen), f"outer_zip:{chosen}"
+    return None, "zip_without_excel"
 
 # ---------------- phosphate ----------------
 r = get_bytes(PHOS_URL); r.raise_for_status()
@@ -87,7 +104,6 @@ phos_summary = {
 }
 (OUT / "phosphate_provenance_summary.json").write_text(json.dumps(phos_summary, indent=2), encoding="utf-8")
 
-# Coverage on exact complete-case model population plus useful optional fields.
 optional = {
     "H": "H", "N": "N", "S": "S", "Ca": "Ca", "Ash": "Ash",
     "pore_volume": "Pore volume", "pore_size": "Average pore size",
@@ -120,28 +136,30 @@ pd.DataFrame(sheet_rows).to_csv(OUT / "dye_all_sheet_inventory.csv", index=False
 
 # ---------------- heavy metal: discover static supplementary payload ----------------
 mdpi_log = []
-heavy_payload = None
+heavy_excel = None
 heavy_url = None
+heavy_mode = None
 for url in MDPI_CANDIDATES:
     try:
         rr = get_bytes(url)
+        excel_bytes, mode = unwrap_excel_payload(rr.content) if rr.status_code == 200 else (None, "http_error")
         rec = {"url": url, "status": rr.status_code, "final_url": rr.url,
                "content_type": rr.headers.get("content-type", ""), "bytes": len(rr.content),
-               "starts_pk": rr.content[:2] == b"PK"}
+               "starts_pk": rr.content[:2] == b"PK", "payload_mode": mode}
         mdpi_log.append(rec)
-        if rr.status_code == 200 and rr.content[:2] == b"PK":
-            heavy_payload, heavy_url = rr.content, url
+        if excel_bytes is not None:
+            heavy_excel, heavy_url, heavy_mode = excel_bytes, url, mode
             break
     except Exception as e:
         mdpi_log.append({"url": url, "error": repr(e)})
 
 (OUT / "heavy_metal_acquisition_log.json").write_text(json.dumps(mdpi_log, indent=2), encoding="utf-8")
 
-if heavy_payload is not None:
-    hx = pd.ExcelFile(BytesIO(heavy_payload))
+if heavy_excel is not None:
+    hx = pd.ExcelFile(BytesIO(heavy_excel))
     inv = []
     for name in hx.sheet_names:
-        h = pd.read_excel(BytesIO(heavy_payload), sheet_name=name)
+        h = pd.read_excel(BytesIO(heavy_excel), sheet_name=name)
         h = h.dropna(how="all")
         cols = list(map(str, h.columns))
         source_cols = [c for c in cols if source_patterns.search(c)]
@@ -149,7 +167,8 @@ if heavy_payload is not None:
                     "source_candidate_columns": " | ".join(source_cols),
                     "all_columns": " | ".join(cols)})
     pd.DataFrame(inv).to_csv(OUT / "heavy_metal_sheet_inventory.csv", index=False)
-    (OUT / "heavy_metal_acquisition_success.json").write_text(json.dumps({"url": heavy_url}, indent=2), encoding="utf-8")
+    (OUT / "heavy_metal_acquisition_success.json").write_text(
+        json.dumps({"url": heavy_url, "mode": heavy_mode}, indent=2), encoding="utf-8")
 
 print(json.dumps(phos_summary, indent=2))
 print("\nDye sheets:")
