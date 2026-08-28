@@ -28,20 +28,26 @@ df = pd.read_excel(BytesIO(r.content), sheet_name=0).dropna(how='all').reset_ind
 df['primary_doi'] = df['doi'].map(norm_doi).ffill()
 df['source_ref'] = df['ref'].ffill()
 
-# Identify likely evidence-location columns without assuming their exact names.
-evidence_cols = [c for c in df.columns if any(k in str(c).lower() for k in ['fig','table','supp','source','sheet','data from'])]
-known = [c for c in ['fig_num','data from', 'data_from', 'source_type', 'sheet'] if c in df.columns]
+# Evidence-location metadata only. Bibliographic reference columns are deliberately
+# excluded so source names cannot masquerade as figure/table evidence.
+evidence_cols = [c for c in df.columns if any(k in str(c).lower() for k in ['fig','table','supp','sheet','data from'])]
+known = [c for c in ['fig_num','data from','data_from','sheet'] if c in df.columns]
 for c in known:
     if c not in evidence_cols:
         evidence_cols.append(c)
 
-# Preserve raw distinct evidence labels and classify conservatively from text.
+
 def evidence_class(row):
-    text = ' | '.join(str(row[c]) for c in evidence_cols if c in row.index and pd.notna(row[c])).lower()
-    if not text.strip(): return 'UNSPECIFIED'
-    if re.search(r'\btable\b|supp|support|spreadsheet|excel|csv', text): return 'TABLE_OR_SUPPLEMENT_CANDIDATE'
-    if re.search(r'\bfig(?:ure)?\b|fig\.|panel|plot|graph', text): return 'FIGURE_CANDIDATE'
+    text = ' | '.join(str(row[c]) for c in evidence_cols if c in row.index and pd.notna(row[c])).strip().lower()
+    if not text:
+        return 'UNSPECIFIED'
+    if re.search(r'table|supp|support|spreadsheet|excel|csv|sheet', text):
+        return 'TABLE_OR_SUPPLEMENT_CANDIDATE'
+    # Handles labels such as fig2a, Fig. 4b, figure 7, panel c, graph, plot.
+    if re.search(r'fig(?:ure)?\s*\.?\s*\d|\bpanel\b|\bplot\b|\bgraph\b', text):
+        return 'FIGURE_CANDIDATE'
     return 'OTHER_OR_UNCLEAR'
+
 
 df['evidence_class_screen'] = df.apply(evidence_class, axis=1)
 if evidence_cols:
@@ -82,4 +88,4 @@ summary = {
 }
 (OUT/'phosphate_extraction_map_summary.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
 print(json.dumps(summary,indent=2))
-print(pd.DataFrame(per_source).sort_values(['table_or_supp_candidate_rows','rows'],ascending=False).head(25).to_string(index=False))
+print(pd.DataFrame(per_source).sort_values(['figure_candidate_rows','table_or_supp_candidate_rows','rows'],ascending=False).head(30).to_string(index=False))
