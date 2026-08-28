@@ -68,9 +68,6 @@ def primary_common() -> pd.DataFrame:
 def fig_matched_pairs(df: pd.DataFrame) -> None:
     x = np.arange(len(df))
     fig, ax = plt.subplots(figsize=(10.5, 5.9))
-
-    # Draw all connectors together so the comparison markers keep one consistent
-    # default color per validation regime rather than cycling per dataset.
     ax.vlines(x, df["grouped_r2"], df["random_r2"], linewidth=1.2, alpha=0.65)
     ax.scatter(x, df["random_r2"], marker="o", s=64, label="Row-random 5-fold CV", zorder=3)
     ax.scatter(x, df["grouped_r2"], marker="s", s=64, label="Primary-study GroupKFold", zorder=3)
@@ -116,35 +113,29 @@ def fig_evidence_context() -> None:
     results = pd.read_csv(RESULTS)
     results["model_family"] = results["model"].map(model_family)
     comparators = pd.read_csv(COMPARATORS)
-
-    # One representative result per evidence class. This panel is intentionally
-    # descriptive and labels which values are project reruns versus published-only.
     records = []
 
-    # Independent rerun: V2.1 XGB.
     r = results[(results.dataset_id == "martin_v21_strict") & (results.model_family == "XGB")].iloc[0]
     records.append({"label": "V2.1\nXGB", "random": float(r.random_r2), "grouped": float(r.grouped_r2), "class": "CI-rerun independent"})
 
-    # Independent rerun: Liu dye CatBoost representative dataset result.
     r = results[(results.dataset_id == "liu_2025_strict") & (results.model_family == "CatBoost")].iloc[0]
     records.append({"label": "Liu dyes\nCatBoost", "random": float(r.random_r2), "grouped": float(r.grouped_r2), "class": "CI-rerun independent"})
 
-    # Independent rerun: ammonia CatBoost.
     r = results[(results.dataset_id == "liu_2025_ammonia") & (results.model_family == "CatBoost")].iloc[0]
     records.append({"label": "Ammonia-N\nCatBoost", "random": float(r.random_r2), "grouped": float(r.grouped_r2), "class": "CI-rerun independent"})
 
-    # Lineage-overlapping sensitivity: Moosavi published-hyperparameter nine-variable RF.
-    r = results[(results.dataset_id == "moosavi_2021_recoverable") &
-                (results.model.astype(str).str.contains("published_hyperparams")) &
-                (results.feature_set.astype(str).str.contains("nine-variable"))].iloc[0]
+    # Moosavi's registry stores the published-hyperparameter descriptor in
+    # feature_set, while model is simply RF.
+    hit = results[(results.dataset_id == "moosavi_2021_recoverable") &
+                  (results.feature_set.astype(str).str.contains("published nine-variable", case=False, na=False))]
+    if len(hit) != 1:
+        raise RuntimeError(f"Expected one Moosavi published nine-variable result, got {len(hit)}")
+    r = hit.iloc[0]
     records.append({"label": "Moosavi\nRF", "random": float(r.random_r2), "grouped": float(r.grouped_r2), "class": "CI-rerun lineage overlap"})
 
-    # Published corroboration: Aguiar M5.
     a = comparators[comparators.comparator_id == "aguiar_2026_clays"].iloc[0]
     records.append({"label": "Aguiar\nRF", "random": float(a.conventional_r2), "grouped": float(a.source_aware_r2), "class": "Published comparator"})
 
-    # Positive counterexample: Huang has no paired conventional result in the paper;
-    # plot only source-aware performance using NaN for the random arm.
     h = comparators[comparators.comparator_id == "huang_2026_heavy_metals"].iloc[0]
     records.append({"label": "Huang\nXGB", "random": np.nan, "grouped": float(h.source_aware_r2), "class": "Published source-aware positive comparator"})
 
@@ -164,8 +155,6 @@ def fig_evidence_context() -> None:
     ax.set_title("Context: the study-aware effect is substantial but not universal")
     ax.legend(frameon=False, ncol=2, loc="lower left")
 
-    # Evidence-class footnote kept in the figure to prevent accidental visual
-    # equivalence between CI-rerun and published-only values.
     foot = (
         "CI-rerun: V2.1, Liu dyes, ammonia-N, Moosavi.  "
         "Moosavi overlaps V2.1 lineage.  Aguiar/Huang are published-only comparators; Huang reports source-aware test R² only."
