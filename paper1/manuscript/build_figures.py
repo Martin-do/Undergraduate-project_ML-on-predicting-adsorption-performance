@@ -29,24 +29,34 @@ OUT = Path(__file__).resolve().parent / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
-# Frozen representative model choices from PAPER1_MULTIDATASET_EVIDENCE_FREEZE.md.
-# Moosavi is retained only as lineage sensitivity and is visibly labelled as such.
+# Frozen representative choices from PAPER1_MULTIDATASET_EVIDENCE_FREEZE.md.
+# feature_match is required where a dataset contains multiple rows with the same
+# model label. Moosavi is retained only as lineage sensitivity.
 SELECTIONS = [
-    ("martin_v21_strict", "XGB", "Dataset A\nV2.1", "primary"),
-    ("liu_2025_strict", "CatBoost500", "Liu dye\n2025", "primary"),
-    ("liu_2025_ammonia", "CatBoost500", "Liu ammonia-N\n2025", "primary"),
-    ("moosavi_2021_recoverable", "RF", "Moosavi\n2021*", "lineage"),
+    ("martin_v21_strict", "XGB", None, "Dataset A\nV2.1", "primary"),
+    ("liu_2025_strict", "CatBoost500", None, "Liu dye\n2025", "primary"),
+    ("liu_2025_ammonia", "CatBoost500", None, "Liu ammonia-N\n2025", "primary"),
+    (
+        "moosavi_2021_recoverable",
+        "RF",
+        "published nine-variable feature set",
+        "Moosavi\n2021*",
+        "lineage",
+    ),
 ]
 
 
 def load_representatives() -> pd.DataFrame:
     df = pd.read_csv(REGISTRY)
     rows = []
-    for dataset_id, model, label, role in SELECTIONS:
+    for dataset_id, model, feature_match, label, role in SELECTIONS:
         hit = df[(df["dataset_id"] == dataset_id) & (df["model"] == model)]
+        if feature_match is not None:
+            hit = hit[hit["feature_set"].astype(str).str.contains(feature_match, regex=False)]
         if len(hit) != 1:
+            qualifier = f" / feature contains {feature_match!r}" if feature_match else ""
             raise RuntimeError(
-                f"Expected exactly one registry row for {dataset_id}/{model}; found {len(hit)}"
+                f"Expected exactly one registry row for {dataset_id}/{model}{qualifier}; found {len(hit)}"
             )
         r = hit.iloc[0].copy()
         r["plot_label"] = label
@@ -148,7 +158,6 @@ def fig5_claim_validation_schematic() -> None:
     fig, ax = plt.subplots(figsize=(10.0, 4.7))
     ax.axis("off")
 
-    # Left: row-random interpolation task.
     ax.text(0.20, 0.90, "Row-random validation", ha="center", fontsize=13, weight="bold")
     ax.text(
         0.20,
@@ -170,7 +179,6 @@ def fig5_claim_validation_schematic() -> None:
         bbox=dict(boxstyle="round,pad=0.5"),
     )
 
-    # Right: study-aware transfer task.
     ax.text(0.78, 0.90, "Primary-study grouped validation", ha="center", fontsize=13, weight="bold")
     ax.text(
         0.78,
@@ -213,6 +221,7 @@ def main() -> None:
             "plot_label",
             "plot_role",
             "model",
+            "feature_set",
             "n_rows",
             "n_groups",
             "random_r2",
