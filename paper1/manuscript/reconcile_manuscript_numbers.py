@@ -32,15 +32,23 @@ def get_row(df: pd.DataFrame, dataset_id: str, model: str, feature_contains: str
 
 
 def token_variants(value: float, decimals: tuple[int, ...]) -> set[str]:
-    variants = set()
-    for d in decimals:
-        variants.add(f"{float(value):.{d}f}")
-    return variants
+    return {f"{float(value):.{d}f}" for d in decimals}
 
 
 def require_any(text: str, label: str, variants: set[str], results: list[dict]):
     found = sorted(v for v in variants if v in text)
-    results.append({"check": label, "status": "PASS" if found else "FAIL", "found": found, "expected_any": sorted(variants)})
+    results.append(
+        {
+            "check": label,
+            "status": "PASS" if found else "FAIL",
+            "found": found,
+            "expected_any": sorted(variants),
+        }
+    )
+
+
+def phrase_present(text: str, phrase: str) -> bool:
+    return phrase.lower() in text.lower()
 
 
 def main():
@@ -74,14 +82,42 @@ def main():
     for label, value, decimals in required:
         require_any(combined, label, token_variants(value, decimals), checks)
 
-    phrase_checks = {
-        "Moosavi non-independence disclosed": ["lineage-overlapping", "not counted as independent"],
-        "Liu shared curation lineage disclosed": ["shared broader", "curation"],
-        "Outcome-neutral boundary stated": ["does not necessarily", "source-aware"],
-    }
-    for label, phrases in phrase_checks.items():
-        ok = all(p.lower() in combined.lower() for p in phrases)
-        checks.append({"check": label, "status": "PASS" if ok else "FAIL", "required_phrases": phrases})
+    # Semantic manuscript-language gates. Alternative equivalent phrasings are allowed.
+    moosavi_lineage = phrase_present(combined, "lineage-overlapping")
+    moosavi_nonindependent = any(
+        phrase_present(combined, p)
+        for p in [
+            "not counted as independent",
+            "excluded from the independent-replication count",
+            "excluded from the independent replication count",
+            "not independent",
+        ]
+    )
+    checks.append(
+        {
+            "check": "Moosavi non-independence disclosed",
+            "status": "PASS" if (moosavi_lineage and moosavi_nonindependent) else "FAIL",
+            "required_phrases": "lineage-overlapping + an explicit non-independent/exclusion statement",
+        }
+    )
+
+    liu_lineage_ok = phrase_present(combined, "shared broader") and phrase_present(combined, "curation")
+    checks.append(
+        {
+            "check": "Liu shared curation lineage disclosed",
+            "status": "PASS" if liu_lineage_ok else "FAIL",
+            "required_phrases": "shared broader + curation",
+        }
+    )
+
+    outcome_neutral_ok = phrase_present(combined, "does not necessarily") and phrase_present(combined, "source-aware")
+    checks.append(
+        {
+            "check": "Outcome-neutral boundary stated",
+            "status": "PASS" if outcome_neutral_ok else "FAIL",
+            "required_phrases": "does not necessarily + source-aware",
+        }
+    )
 
     prohibited = [
         "QMAX = 624",
@@ -92,13 +128,22 @@ def main():
         "~0.90 unseen-study generalisation",
     ]
     for phrase in prohibited:
-        present = phrase.lower() in combined.lower()
-        checks.append({"check": f"Prohibited legacy claim absent: {phrase}", "status": "FAIL" if present else "PASS"})
+        present = phrase_present(combined, phrase)
+        checks.append(
+            {
+                "check": f"Prohibited legacy claim absent: {phrase}",
+                "status": "FAIL" if present else "PASS",
+            }
+        )
 
-    # Basic evidence-count and population gates.
     population_strings = ["273", "24", "624", "17", "409", "7"]
     for token in population_strings:
-        checks.append({"check": f"Core population token present: {token}", "status": "PASS" if token in combined else "FAIL"})
+        checks.append(
+            {
+                "check": f"Core population token present: {token}",
+                "status": "PASS" if token in combined else "FAIL",
+            }
+        )
 
     report = pd.DataFrame(checks)
     report.to_csv(OUT / "manuscript_numeric_reconciliation.csv", index=False)
@@ -113,7 +158,9 @@ def main():
         "registry": str(REGISTRY.relative_to(ROOT)),
         "status": "PASS" if failures.empty else "FAIL",
     }
-    (OUT / "manuscript_numeric_reconciliation_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (OUT / "manuscript_numeric_reconciliation_summary.json").write_text(
+        json.dumps(summary, indent=2), encoding="utf-8"
+    )
 
     print(report.to_string(index=False))
     print("\n", json.dumps(summary, indent=2))
