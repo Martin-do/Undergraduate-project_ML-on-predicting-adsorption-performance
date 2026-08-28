@@ -1,0 +1,37 @@
+name: Paper 1 build Draft V2
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'paper1/manuscript/PAPER1_MANUSCRIPT_DRAFT_V1.md'
+      - 'paper1/manuscript/build_draft_v2.py'
+      - 'paper1/manuscript/FIGURE_CAPTIONS_V1.md'
+      - '.github/workflows/paper1-build-draft-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-draft-v2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build Draft V2
+        run: python paper1/manuscript/build_draft_v2.py
+
+      - name: Upload Draft V2
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-manuscript-draft-v2
+          path: paper1/manuscript/PAPER1_MANUSCRIPT_DRAFT_V2.md
+          if-no-files-found: error
