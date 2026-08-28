@@ -60,11 +60,17 @@ def main() -> None:
         "### 4.1 Row-random interpolation and unseen-study transfer are different estimands\n\nFigure 5 summarizes the claim–validation distinction. The main finding is not that random cross-validation is intrinsically invalid.",
     )
 
-    # 5. Correct the verified full ammonia-paper author list.
+    # 5. Correct verified bibliography details.
     text = replace_once(
         text,
         "Liu, C., Balasubramanian, P., An, J., et al. (2025). Machine learning prediction of ammonia nitrogen adsorption on biochar with model evaluation and optimization.",
         "Liu, C., Balasubramanian, P., An, J., & Li, F. (2025). Machine learning prediction of ammonia nitrogen adsorption on biochar with model evaluation and optimization.",
+    )
+
+    text = replace_once(
+        text,
+        "Moosavi, S., et al. (2021). A Study on Machine Learning Methods’ Application for Dye Adsorption Prediction onto Agricultural Waste Activated Carbon.",
+        "Moosavi, S., Manta, O., El-Badry, Y. A., Hussein, E. E., El-Bahy, Z. M., Mohd Fawzi, N. F. B., Urbonavičius, J., & Moosavi, S. M. H. (2021). A Study on Machine Learning Methods’ Application for Dye Adsorption Prediction onto Agricultural Waste Activated Carbon.",
     )
 
     # 6. Mark version and caption source without altering scientific claims.
@@ -72,6 +78,16 @@ def main() -> None:
         text,
         "**Manuscript status:** Draft V1 — reconstructed from the frozen Paper 1 evidence base",
         "**Manuscript status:** Draft V2 — scientific/editorial refinement of the numerically reconciled frozen-evidence draft",
+    )
+    text = replace_once(
+        text,
+        "## References — verified core set for Draft V1",
+        "## References — verified core set for Draft V2",
+    )
+    text = replace_once(
+        text,
+        "Draft V1 intentionally does not invent incomplete bibliographic metadata.",
+        "Draft V2 intentionally does not invent incomplete bibliographic metadata.",
     )
 
     caption_note = (
