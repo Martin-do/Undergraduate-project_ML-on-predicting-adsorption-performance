@@ -7,6 +7,7 @@ numerical values are read from MULTIDATASET_RESULTS_REGISTRY.csv.
 Outputs
 -------
 paper1/manuscript/figures/
+    fig1_evidence_provenance_flow.png
     fig2_random_vs_grouped_r2.png
     fig3_validation_gap_vs_study_count.png
     fig4_loso_r2_summary.png
@@ -74,6 +75,60 @@ def load_representatives() -> pd.DataFrame:
     for col in required:
         out[col] = pd.to_numeric(out[col], errors="coerce")
     return out
+
+
+def fig1_evidence_provenance_flow() -> None:
+    """Show how corpus provenance determines the evidence hierarchy."""
+    fig, ax = plt.subplots(figsize=(11.5, 6.5))
+    ax.axis("off")
+
+    def box(x, y, text, width=0.22, height=0.13, weight="normal"):
+        ax.text(
+            x,
+            y,
+            text,
+            ha="center",
+            va="center",
+            fontsize=10.5,
+            weight=weight,
+            bbox=dict(boxstyle="round,pad=0.55"),
+        )
+
+    # Top: scientific problem and frozen protocol.
+    box(0.50, 0.91, "Literature-derived adsorption ML\nrows nested within primary studies", width=0.30, weight="bold")
+    ax.annotate("", xy=(0.50, 0.77), xytext=(0.50, 0.84), arrowprops=dict(arrowstyle="->"))
+    box(0.50, 0.70, "Frozen outcome-neutral protocol\nreconstruct provenance before grouped outcomes", width=0.34)
+
+    # Middle evidence streams.
+    ax.annotate("", xy=(0.18, 0.53), xytext=(0.45, 0.64), arrowprops=dict(arrowstyle="->"))
+    ax.annotate("", xy=(0.42, 0.53), xytext=(0.48, 0.63), arrowprops=dict(arrowstyle="->"))
+    ax.annotate("", xy=(0.66, 0.53), xytext=(0.52, 0.63), arrowprops=dict(arrowstyle="->"))
+    ax.annotate("", xy=(0.87, 0.53), xytext=(0.55, 0.64), arrowprops=dict(arrowstyle="->"))
+
+    box(0.18, 0.47, "Primary matched evidence\nA: 273 / 24\nB: 624 / 17\nC: 409 / 7", width=0.24, weight="bold")
+    box(0.42, 0.47, "Lineage sensitivity\nMoosavi: 344 / 12\nsource overlap → not independent", width=0.24)
+    box(0.66, 0.47, "Cross-team corroboration\nAguiar 2026\nconventional vs study-grouped", width=0.24)
+    box(0.87, 0.47, "Positive comparator\nHuang 2026\npublication-separated, high R²", width=0.22)
+
+    # Bottom: analysis and inference.
+    for x in [0.18, 0.42, 0.66, 0.87]:
+        ax.annotate("", xy=(0.50, 0.25), xytext=(x, 0.38), arrowprops=dict(arrowstyle="->"))
+    box(0.50, 0.20, "Evidence synthesis", width=0.22, weight="bold")
+    ax.annotate("", xy=(0.50, 0.07), xytext=(0.50, 0.13), arrowprops=dict(arrowstyle="->"))
+    ax.text(
+        0.50,
+        0.025,
+        "Inference: validation-unit sensitivity is dataset-dependent; claims must match the scientific unit withheld.",
+        ha="center",
+        va="bottom",
+        fontsize=10.5,
+        weight="bold",
+    )
+
+    ax.set_title("Evidence and provenance hierarchy used in the multi-dataset reanalysis", fontsize=14, pad=14)
+    fig.tight_layout()
+    fig.savefig(OUT / "fig1_evidence_provenance_flow.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
 
 
 def fig2_paired_r2(rep: pd.DataFrame) -> None:
@@ -231,6 +286,7 @@ def main() -> None:
         ]
     ].to_csv(OUT / "figure_values_used.csv", index=False)
 
+    fig1_evidence_provenance_flow()
     fig2_paired_r2(rep)
     fig3_gap_vs_groups(rep)
     fig4_loso(rep)
