@@ -11,6 +11,7 @@ Run from repository root:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -63,6 +64,12 @@ def add_phrase_check(checks: list[dict], combined: str, label: str, phrases: lis
     )
 
 
+def figure_callout_present(text: str, fig_num: int) -> bool:
+    """Recognize singular or compound callouts such as 'Figure 2' or 'Figures 3 and 4'."""
+    pattern = rf"\bFigures?\b[^.\n]{{0,40}}\b{fig_num}\b"
+    return re.search(pattern, text, flags=re.IGNORECASE) is not None
+
+
 def main():
     df = pd.read_csv(REGISTRY)
     manuscript = MANUSCRIPT.read_text(encoding="utf-8")
@@ -94,7 +101,6 @@ def main():
     for label, value, decimals in required:
         require_any(combined, label, token_variants(value, decimals), checks)
 
-    # Semantic manuscript-language gates. Alternative equivalent phrasings are allowed.
     moosavi_lineage = phrase_present(combined, "lineage-overlapping")
     moosavi_nonindependent = any(
         phrase_present(combined, p)
@@ -148,7 +154,7 @@ def main():
         checks.append(
             {
                 "check": f"Figure {fig_num} callout present",
-                "status": "PASS" if phrase_present(manuscript, f"Figure {fig_num}") or phrase_present(manuscript, f"Figures {fig_num}") else "FAIL",
+                "status": "PASS" if figure_callout_present(manuscript, fig_num) else "FAIL",
             }
         )
 
