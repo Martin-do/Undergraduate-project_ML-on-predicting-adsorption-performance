@@ -30,10 +30,10 @@ df['source_ref'] = df['ref'].ffill()
 
 # Identify likely evidence-location columns without assuming their exact names.
 evidence_cols = [c for c in df.columns if any(k in str(c).lower() for k in ['fig','table','supp','source','sheet','data from'])]
-# Explicit known extraction provenance columns from this workbook, if present.
 known = [c for c in ['fig_num','data from', 'data_from', 'source_type', 'sheet'] if c in df.columns]
 for c in known:
-    if c not in evidence_cols: evidence_cols.append(c)
+    if c not in evidence_cols:
+        evidence_cols.append(c)
 
 # Preserve raw distinct evidence labels and classify conservatively from text.
 def evidence_class(row):
@@ -44,7 +44,12 @@ def evidence_class(row):
     return 'OTHER_OR_UNCLEAR'
 
 df['evidence_class_screen'] = df.apply(evidence_class, axis=1)
-df['evidence_label'] = df[evidence_cols].astype(str).agg(' | '.join, axis=1) if evidence_cols else ''
+if evidence_cols:
+    def join_evidence(row):
+        return ' | '.join(str(v) for v in row.tolist() if pd.notna(v) and str(v).strip())
+    df['evidence_label'] = df[evidence_cols].apply(join_evidence, axis=1)
+else:
+    df['evidence_label'] = ''
 
 per_source = []
 for doi, g in df.groupby('primary_doi', sort=False):
