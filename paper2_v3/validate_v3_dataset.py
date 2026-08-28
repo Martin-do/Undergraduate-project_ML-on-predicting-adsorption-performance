@@ -1,7 +1,7 @@
 """Pre-modelling validation gate for Paper 2 / V3 datasets.
 
-This script enforces provenance, target, duplicate and predictor-safety rules before
-any model is permitted to consume a curated V3 CSV.
+This script enforces provenance, target, duplicate, predictor-safety and external-
+holdout exclusion rules before any model is permitted to consume a curated V3 CSV.
 
 Usage:
     python paper2_v3/validate_v3_dataset.py paper2_v3/adsorption_v3_template.csv
@@ -13,11 +13,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import sys
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 SCHEMA = HERE / "DATASET_SCHEMA_V3.csv"
+DEFAULT_HOLDOUT = HERE / "PHOSPHATE_EXTERNAL_HOLDOUT_REGISTRY_V0.csv"
 
 PROVENANCE_REQUIRED_FOR_INCLUDED = {
     "record_id",
@@ -75,6 +75,18 @@ PROHIBITED_PREDICTOR_FIELDS = {
     "study_share_primary_population",
     "notes",
 }
+
+
+def normalize_doi(v) -> str:
+    if pd.isna(v):
+        return ""
+    s = str(v).strip().lower()
+    for prefix in (
+        "https://doi.org/", "http://doi.org/",
+        "https://dx.doi.org/", "http://dx.doi.org/", "doi:"
+    ):
+        s = s.replace(prefix, "")
+    return s.strip()
 
 
 def fail(errors: list[str]) -> None:
@@ -156,6 +168,29 @@ def validate_rows(df: pd.DataFrame) -> list[str]:
     return errors
 
 
+def validate_holdout_exclusion(df: pd.DataFrame, registry_path: Path | None) -> list[str]:
+    if registry_path is None or not registry_path.exists() or df.empty:
+        return []
+    if "source_doi" not in df.columns:
+        return ["source_doi column is required to enforce external-holdout exclusion"]
+
+    registry = pd.read_csv(registry_path)
+    if "primary_doi" not in registry.columns:
+        return [f"Holdout registry {registry_path} must contain a primary_doi column"]
+
+    holdouts = {normalize_doi(x) for x in registry["primary_doi"].dropna()}
+    holdouts.discard("")
+    included = df[df["inclusion_status"].astype(str) == "include"].copy()
+    if included.empty:
+        return []
+
+    included["_doi_norm"] = included["source_doi"].map(normalize_doi)
+    leaked = sorted(set(included.loc[included["_doi_norm"].isin(holdouts), "_doi_norm"]))
+    if leaked:
+        return [f"Locked external-holdout DOI(s) found in development included population: {leaked}"]
+    return []
+
+
 def validate_predictor_manifest(path: Path | None) -> list[str]:
     if path is None:
         return []
@@ -188,6 +223,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("dataset", type=Path)
     ap.add_argument("--predictors", type=Path, default=None, help="Optional CSV containing a 'feature' column")
+    ap.add_argument(
+        "--holdout-registry", type=Path,
+        default=DEFAULT_HOLDOUT if DEFAULT_HOLDOUT.exists() else None,
+        help="CSV with primary_doi values prohibited from the development population",
+    )
     args = ap.parse_args()
 
     df = pd.read_csv(args.dataset)
@@ -195,12 +235,15 @@ def main() -> None:
     errors.extend(validate_schema(df))
     if not errors:
         errors.extend(validate_rows(df))
+        errors.extend(validate_holdout_exclusion(df, args.holdout_registry))
     errors.extend(validate_predictor_manifest(args.predictors))
 
     if errors:
         fail(errors)
 
     summary(df)
+    if args.holdout_registry is not None:
+        print(f"External-holdout registry enforced: {args.holdout_registry}")
     print("V3 DATA GATE: PASS")
 
 
