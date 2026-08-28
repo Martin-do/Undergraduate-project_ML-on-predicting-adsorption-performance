@@ -1,8 +1,9 @@
-"""Reconcile Paper 1 Draft V1 numerical claims against frozen evidence.
+"""Reconcile Paper 1 Draft V2 numerical and key wording claims against frozen evidence.
 
 This is a manuscript-integrity gate, not a scientific re-analysis. It checks that
-headline project-generated values appearing in the manuscript/tables agree with the
-machine-readable registry and that known prohibited legacy claim strings are absent.
+headline project-generated values appearing in the current working manuscript/tables
+agree with the machine-readable registry, verifies key independence/reference wording,
+and confirms that known prohibited legacy claim strings are absent.
 
 Run from repository root:
     python paper1/manuscript/reconcile_manuscript_numbers.py
@@ -16,7 +17,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "validation_v2" / "MULTIDATASET_RESULTS_REGISTRY.csv"
-MANUSCRIPT = Path(__file__).resolve().parent / "PAPER1_MANUSCRIPT_DRAFT_V1.md"
+MANUSCRIPT = Path(__file__).resolve().parent / "PAPER1_MANUSCRIPT_DRAFT_V2.md"
 TABLES = Path(__file__).resolve().parent / "TABLES_V1.md"
 OUT = Path(__file__).resolve().parent / "reconciliation"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -49,6 +50,17 @@ def require_any(text: str, label: str, variants: set[str], results: list[dict]):
 
 def phrase_present(text: str, phrase: str) -> bool:
     return phrase.lower() in text.lower()
+
+
+def add_phrase_check(checks: list[dict], combined: str, label: str, phrases: list[str]) -> None:
+    ok = all(phrase_present(combined, p) for p in phrases)
+    checks.append(
+        {
+            "check": label,
+            "status": "PASS" if ok else "FAIL",
+            "required_phrases": " + ".join(phrases),
+        }
+    )
 
 
 def main():
@@ -101,23 +113,44 @@ def main():
         }
     )
 
-    liu_lineage_ok = phrase_present(combined, "shared broader") and phrase_present(combined, "curation")
-    checks.append(
-        {
-            "check": "Liu shared curation lineage disclosed",
-            "status": "PASS" if liu_lineage_ok else "FAIL",
-            "required_phrases": "shared broader + curation",
-        }
+    add_phrase_check(
+        checks,
+        combined,
+        "Liu shared curation lineage disclosed",
+        ["shared a broader data-curation/author-team lineage"],
+    )
+    add_phrase_check(
+        checks,
+        combined,
+        "Primary-study-disjoint Liu wording present",
+        ["primary-study-disjoint"],
+    )
+    add_phrase_check(
+        checks,
+        combined,
+        "Outcome-neutral boundary stated",
+        ["does not necessarily", "source-aware"],
+    )
+    add_phrase_check(
+        checks,
+        combined,
+        "Verified Liu ammonia author list present",
+        ["Liu, C., Balasubramanian, P., An, J., & Li, F. (2025)"],
+    )
+    add_phrase_check(
+        checks,
+        combined,
+        "Verified Moosavi full author list present",
+        ["Moosavi, S., Manta, O., El-Badry, Y. A."],
     )
 
-    outcome_neutral_ok = phrase_present(combined, "does not necessarily") and phrase_present(combined, "source-aware")
-    checks.append(
-        {
-            "check": "Outcome-neutral boundary stated",
-            "status": "PASS" if outcome_neutral_ok else "FAIL",
-            "required_phrases": "does not necessarily + source-aware",
-        }
-    )
+    for fig_num in range(1, 6):
+        checks.append(
+            {
+                "check": f"Figure {fig_num} callout present",
+                "status": "PASS" if phrase_present(manuscript, f"Figure {fig_num}") or phrase_present(manuscript, f"Figures {fig_num}") else "FAIL",
+            }
+        )
 
     prohibited = [
         "QMAX = 624",
