@@ -1,0 +1,31 @@
+name: Paper 1 manuscript figures
+
+on:
+  push:
+    branches:
+      - paper1/multidataset-study-aware-replication
+    paths:
+      - 'validation_v2/MULTIDATASET_RESULTS_REGISTRY.csv'
+      - 'validation_v2/SOURCE_AWARE_COMPARATOR_REGISTRY.csv'
+      - 'validation_v2/paper1_manuscript_figures.py'
+      - '.github/workflows/paper1-manuscript-figures.yml'
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pandas numpy matplotlib
+      - name: Render publication figures
+        run: python validation_v2/paper1_manuscript_figures.py
+      - name: Upload manuscript figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper1-manuscript-figures
+          path: validation_v2/outputs/paper1_manuscript_figures/
+          if-no-files-found: error
