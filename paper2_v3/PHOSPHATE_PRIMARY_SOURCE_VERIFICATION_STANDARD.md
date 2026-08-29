@@ -2,6 +2,8 @@
 
 Status: **LOCKED BEFORE ANY COMPILATION ROW IS ADMITTED TO V3**
 
+Clarification recorded 2026-08-29, before predictive modelling: an experimentally observed numerical value stated explicitly and unambiguously in the primary article prose is treated as Class A evidence alongside exact primary tables/machine-readable values. This clarification is source-neutral and does not relax any source-, condition-, target-, unit-, species- or lineage-verification requirement.
+
 ## 1. Purpose
 
 The public phosphate master workbook is a discovery and extraction aid, not an authoritative primary dataset. A DOI block is not admitted merely because its metadata resolve or because its values look plausible.
@@ -24,14 +26,17 @@ A primary study must pass all of the following before any of its rows can be mar
 
 Each proposed V3 row must use one of these evidence classes.
 
-### A — exact machine-readable/table value
+### A — exact primary numerical value
 
-Preferred. The value is present in:
+Preferred. The experimentally observed value is stated explicitly and unambiguously in the primary source, including:
 - a primary supplementary spreadsheet/CSV;
 - an HTML/XML table;
-- a primary article table with unambiguous row/column coordinates.
+- a primary article table with unambiguous row/column coordinates;
+- primary article prose that directly states the observed experimental value and makes its measured quantity/units unambiguous.
 
-Record exact source location and retain original units.
+A value is not Class A merely because a fitted/model parameter is printed exactly. Fitted kinetic `qe`, Langmuir `qmax`, optimisation predictions or other model-derived response values remain ineligible for the observed V3 `qe` target unless separately analysed under a different target definition.
+
+Record exact source location and retain original units/basis.
 
 ### B — reproducibly derived primary value
 
@@ -39,7 +44,7 @@ Permitted where `qe` is calculated from primary reported quantities using a docu
 
 ### C — figure-digitized primary value
 
-Permitted only when the primary source reports the experimental series graphically and no exact table is available.
+Permitted only when the primary source reports the experimental series graphically and no exact table/text value is available.
 
 Requirements:
 - the figure/panel/series must be identified;
@@ -53,7 +58,7 @@ A secondary compilation's digitized value may be used as a candidate coordinate,
 
 ### D — unverifiable
 
-If the value cannot be traced to an exact table, reproducible derivation or primary figure with sufficient clarity, it is not admitted to the primary V3 population.
+If the value cannot be traced to an exact primary value, reproducible derivation or primary figure with sufficient clarity, it is not admitted to the primary V3 population.
 
 ## 4. No spot-check admission
 
@@ -82,7 +87,7 @@ For every admitted row retain:
 - `primary_study_id`;
 - DOI;
 - source title/year;
-- figure/table/supplement location;
+- figure/table/supplement/text location;
 - original row/series label where available;
 - extraction evidence class A/B/C;
 - original units;
@@ -93,7 +98,7 @@ For every admitted row retain:
 
 ## 8. Batch workflow
 
-Verification proceeds source by source. Large source blocks are not automatically prioritized over sources with cleaner primary evidence. Studies with machine-readable or clear tabular data should generally be admitted first because they provide lower extraction uncertainty.
+Verification proceeds source by source. Large source blocks are not automatically prioritized over sources with cleaner primary evidence. Studies with machine-readable, clear tabular or explicit primary-text observations should generally be admitted first because they provide lower extraction uncertainty.
 
 ## 9. Modelling gate
 
