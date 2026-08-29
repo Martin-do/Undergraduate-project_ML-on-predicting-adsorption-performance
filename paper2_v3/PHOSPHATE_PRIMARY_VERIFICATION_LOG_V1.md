@@ -12,7 +12,8 @@ This log applies the locked `PHOSPHATE_PRIMARY_SOURCE_VERIFICATION_STANDARD.md`.
 
 | DOI | Study | Primary access | Row decision | V3 status |
 |---|---|---|---|---|
-| `10.3390/separations8030032` | Son et al. (2021) | Open primary article | Three exact experimental equilibrium capacities verified from Table 3 | **PRIMARY-VERIFIED STAGING: 3 rows** |
+| `10.3390/separations8030032` | Son et al. (2021) | Open primary article | Three exact experimental equilibrium capacities verified from Table 3 | **PRIMARY-VERIFIED STAGING: 3 Class A rows** |
+| `10.3390/ijerph20010326` | Qin et al. (2023) | Open primary article/PMC | Two equilibrium capacities reproducibly derived from exact primary first-cycle removal values and harmonized from P to PO4 mass basis | **PRIMARY-VERIFIED STAGING: 2 Class B rows** |
 | `10.3390/ijerph19127227` | Feng et al. (2022) | Open primary article | Secondary packet values conflict materially with primary-text pH response | **BLOCKED — discrepancy reconciliation required** |
 | `10.3390/ma13040816` | Tao et al. (2020) | Open primary article/PMC | Direct experimental equilibrium capacities identified, but required condition fields are incomplete for Figure 9 experiment | **BLOCKED — condition matching required** |
 
@@ -63,7 +64,58 @@ They are **not yet released to model development**. Their row-level numerical pr
 
 The remaining 213 candidate rows from the 216-row secondary DOI block remain **unadmitted**. No spot-check propagation is permitted.
 
-## 2. Feng et al. 2022 — PRIMARY/SECONDARY DISCREPANCY
+## 2. Qin et al. 2023 — VERIFIED CLASS B PRIMARY STAGING
+
+**DOI:** `10.3390/ijerph20010326`
+
+**Title:** *Phosphate Removal Mechanisms in Aqueous Solutions by Three Different Fe-Modified Biochars*
+
+### Primary-source evidence
+
+The paper reports its working concentration on a phosphorus basis (`15 mg P/L`) and states that the default batch system uses a biochar-to-solution ratio of `1:200 g:mL`, equivalent to `5 g/L`, at `25 ± 1 °C`, `30 rpm`, pH `6`, with `0.01 M NaNO3` background electrolyte. Figure 9 specifies a 24 h adsorption step.
+
+The primary text reports exact first-cycle/baseline removal efficiencies:
+
+- GBC: `68.62%` before the first NaOH-regeneration loss;
+- ZBC: `96.52%` for the first adsorption/washing cycle.
+
+The same paper independently reports that GBC and ZBC reach adsorption equilibrium after approximately `240 min` and `120 min`, respectively. Therefore the 24 h Figure 9 observations qualify as terminal/equilibrium observations for these two materials. CSBC is not included because its equilibrium requires approximately 10 days and its exact first-cycle baseline is not reported in the text with the same clarity.
+
+### Reproducible qe derivation
+
+For an adsorption experiment reported on a P mass basis:
+
+`qe_P = (removal_fraction × initial_P_concentration) / adsorbent_dose`
+
+Thus:
+
+- GBC: `(0.6862 × 15) / 5 = 2.0586 mg P/g`;
+- ZBC: `(0.9652 × 15) / 5 = 2.8956 mg P/g`.
+
+To prevent mixing P-mass and PO4-mass targets, both the initial concentration and `qe` are harmonized to the PO4 mass basis using the deterministic stoichiometric ratio:
+
+`M(PO4) / M(P) = 3.06613585`.
+
+Resulting V3 staging values:
+
+- GBC: `6.311947 mg PO4/g`; initial concentration `45.992038 mg PO4/L`;
+- ZBC: `8.878303 mg PO4/g`; initial concentration `45.992038 mg PO4/L`.
+
+The original P basis, equation, inputs, conversion factor and converted outputs are all retained in `unit_conversion_note`. These observations therefore satisfy **Evidence Class B — reproducibly derived primary value**.
+
+### Material descriptors
+
+The primary article verifies lychee twig as the feedstock. GBC is goethite-modified biochar prepared from the 600 °C pristine biochar, while ZBC is Fe/ZVI-modified material subjected to a 900 °C secondary pyrolysis. Table 1 provides BET surface area and elemental composition used in the staging rows.
+
+The Table 1 field labelled as pore volume is presented with units of `nm`; because that combination is semantically inconsistent with the V3 `total_pore_volume_cm3_g` field, no pore-volume or pore-size value is silently reinterpreted in these two rows.
+
+### Admission decision
+
+Two Qin observations are added to `PHOSPHATE_V3_PRIMARY_VERIFIED_STAGING.csv` as primary-verified staging rows. Like Son, they remain `sensitivity/possible_lineage` until the duplicate/lineage reconciliation and population freeze are complete.
+
+The other 118 rows in the secondary Qin packet remain unadmitted.
+
+## 3. Feng et al. 2022 — PRIMARY/SECONDARY DISCREPANCY
 
 **DOI:** `10.3390/ijerph19127227`
 
@@ -77,7 +129,7 @@ However, the candidate secondary packet reports approximately `38–49 mg/g` acr
 
 The primary article also reports a fitted Langmuir maximum near `88.64 mg P/g`. That fitted `Qmax` is explicitly excluded from the V3 `qe_mg_g` target.
 
-## 3. Tao et al. 2020 — DIRECT QE VALUES FOUND, CONDITIONS INCOMPLETE
+## 4. Tao et al. 2020 — DIRECT QE VALUES FOUND, CONDITIONS INCOMPLETE
 
 **DOI:** `10.3390/ma13040816`
 
@@ -103,19 +155,21 @@ However, that method states that samples were taken at a preset time and does no
 
 **Decision:** the three Tao capacities remain primary-verified *candidates* but are not added to the V3 staging CSV until the missing condition fields can be established from primary evidence or the feature/eligibility protocol is formally revised before modelling.
 
-## 4. Current staging count
+## 5. Current staging count
 
-- primary-verified staging rows: **3**
-- primary studies represented: **1**
+- primary-verified staging rows: **5**
+- primary studies represented: **2**
+- Evidence Class A rows: **3**
+- Evidence Class B rows: **2**
 - rows released for modelling: **0**
 - model training performed: **none**
 
-A final V3 data-gate run is intentionally deferred because the staging population currently contains only one independent study and has not completed lineage reconciliation.
+The staging population now spans two independent primary studies, but a final V3 data-gate release remains inappropriate because duplicate/lineage reconciliation and the prespecified multi-study corpus build are incomplete.
 
-## 5. Next verification priority
+## 6. Next verification priority
 
-1. Continue with open-access studies whose primary figures/tables expose exact experimental `qe` plus all mandatory process conditions.
-2. Prefer Evidence Class A/B rows before any Class C figure digitization.
-3. Use Qin et al. 2023 and the remaining open-access verification packets as the next candidates for a second independently verified study.
-4. Keep Tao and Feng blocked until their specific unresolved issues are closed.
-5. Do not train any predictive model until the predeclared multi-study curation and freeze gates are satisfied.
+1. Continue through the remaining open-access packets, prioritizing exact table values and reproducibly derived primary values.
+2. Build independent-study depth rather than accumulating many rows from Son or Qin.
+3. Keep Tao and Feng blocked until their specific unresolved issues are closed.
+4. Do not authorize wholesale secondary-compilation rows after a few successful anchors.
+5. Do not train any predictive model until the predeclared curation, lineage and population-freeze gates are satisfied.
