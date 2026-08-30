@@ -37,6 +37,9 @@ jobs:
       - name: Run LOSO identity-ablation follow-up
         run: python conference_salvage/reviewer_revision_gate_v2/run_identity_loso_followup.py
 
+      - name: Run crossed identity-missingness sensitivity
+        run: python conference_salvage/reviewer_revision_gate_v2/run_crossed_missingness_sensitivity.py
+
       - name: Upload reviewer revision gate evidence
         if: always()
         uses: actions/upload-artifact@v4
