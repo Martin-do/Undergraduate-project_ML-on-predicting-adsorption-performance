@@ -34,6 +34,9 @@ jobs:
       - name: Run reviewer revision gate analyses
         run: python conference_salvage/reviewer_revision_gate_v2/run_reviewer_revision_gate_v2.py
 
+      - name: Run LOSO identity-ablation follow-up
+        run: python conference_salvage/reviewer_revision_gate_v2/run_identity_loso_followup.py
+
       - name: Upload reviewer revision gate evidence
         if: always()
         uses: actions/upload-artifact@v4
