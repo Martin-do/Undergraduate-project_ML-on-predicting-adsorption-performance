@@ -48,3 +48,47 @@ jobs:
           path: conference_salvage/reviewer_revision_gate_v2/outputs/
           if-no-files-found: error
           retention-days: 90
+
+      - name: Stage reviewer source and evidence bundle
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE=conference_salvage/reviewer_revision_gate_v2/reviewer_source_bundle
+          rm -rf "$BUNDLE"
+          mkdir -p "$BUNDLE/conference_salvage"
+          cp -R validation_v2 "$BUNDLE/validation_v2"
+          cp -R conference_salvage/reproducibility "$BUNDLE/conference_salvage/reproducibility"
+          cp -R conference_salvage/reviewer_revision_gate_v2 "$BUNDLE/conference_salvage/reviewer_revision_gate_v2_full"
+          rm -rf "$BUNDLE/conference_salvage/reviewer_revision_gate_v2_full/reviewer_source_bundle"
+          cp conference_salvage/POST_REVIEW_NUMERIC_SOURCE_OF_TRUTH.md "$BUNDLE/conference_salvage/"
+          cp conference_salvage/INDEPENDENT_REVIEW_RESPONSE_V2.md "$BUNDLE/conference_salvage/"
+          cp conference_salvage/CLAIM_RECONCILIATION_MATRIX_V2.md "$BUNDLE/conference_salvage/"
+          cp conference_salvage/MANUSCRIPT_RECONSTRUCTION_V2.md "$BUNDLE/conference_salvage/"
+          cp conference_salvage/DEFENCE_DOSSIER_V2.md "$BUNDLE/conference_salvage/"
+          for f in Biochar_dye_filtered.xlsx Raw_data.xlsx final_final_adsorption_done_dataset.csv; do
+            if [ -f "$f" ]; then cp "$f" "$BUNDLE/"; fi
+          done
+          cat > "$BUNDLE/README_CODE_BUNDLE.txt" <<'EOF'
+          ID-SEAD reviewer source/evidence bundle.
+
+          This artifact contains the actual current validation/preprocessing source code, the V2.1 validation directory and outputs, the conference reproducibility layer, all post-review sensitivity scripts/results, and the root input files required by the validation path where available.
+
+          Recommended commands from the repository root layout:
+            python conference_salvage/reproducibility/run_corrected_validation.py
+            python -m unittest discover conference_salvage/reproducibility/tests -v
+            python conference_salvage/reviewer_revision_gate_v2_full/run_reviewer_revision_gate_v2.py
+            python conference_salvage/reviewer_revision_gate_v2_full/run_identity_loso_followup.py
+            python conference_salvage/reviewer_revision_gate_v2_full/run_crossed_missingness_sensitivity.py
+
+          The GitHub branch remains the authoritative version-control record.
+          EOF
+
+      - name: Upload reviewer source and evidence bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: id-sead-reviewer-v2-code-evidence
+          path: conference_salvage/reviewer_revision_gate_v2/reviewer_source_bundle/
+          if-no-files-found: error
+          retention-days: 90
