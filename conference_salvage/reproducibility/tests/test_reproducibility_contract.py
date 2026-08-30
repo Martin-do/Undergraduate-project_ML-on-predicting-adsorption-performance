@@ -8,6 +8,7 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parents[1]
 OUT = HERE / "outputs"
+BASELINE = HERE / "baseline_expectations.json"
 
 
 class ReproducibilityContractTests(unittest.TestCase):
@@ -18,6 +19,7 @@ class ReproducibilityContractTests(unittest.TestCase):
             "robustness_v21_loso_pooled.csv",
             "conference_metrics_snapshot.json",
             "contract_checks.json",
+            "baseline_verification.json",
             "environment_freeze.txt",
             "run_manifest.json",
         ]
@@ -52,6 +54,24 @@ class ReproducibilityContractTests(unittest.TestCase):
         checks = json.loads((OUT / "contract_checks.json").read_text())
         self.assertTrue(checks)
         self.assertTrue(all(checks.values()), checks)
+
+    def test_historical_baseline_verification_passes(self):
+        verification = json.loads((OUT / "baseline_verification.json").read_text())
+        self.assertTrue(verification["python_exact_match"])
+        self.assertTrue(all(verification["package_exact_match"].values()))
+        self.assertTrue(all(verification["scope_exact_match"].values()))
+        self.assertTrue(all(verification["numeric_exact_within_tolerance"].values()))
+
+    def test_manifest_records_historical_lineage(self):
+        manifest = json.loads((OUT / "run_manifest.json").read_text())
+        baseline = json.loads(BASELINE.read_text())
+        self.assertTrue(manifest["historical_baseline_matched"])
+        self.assertEqual(
+            manifest["historical_reference"],
+            baseline["historical_reference"],
+        )
+        self.assertIn("Biochar_dye_filtered.xlsx", manifest["input_sha256"])
+        self.assertIn("Raw_data.xlsx", manifest["input_sha256"])
 
 
 if __name__ == "__main__":
