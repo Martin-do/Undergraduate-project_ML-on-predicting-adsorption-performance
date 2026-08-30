@@ -1,6 +1,6 @@
 {
   "analysis_id": "id-sead-conference-salvage-v1",
-  "python": "3.11",
+  "python": "3.11.15",
   "random_state": 42,
   "dataset": "validation_v2/adsorption_dataset_v2_1.csv",
   "primary_group_column": "primary_study_id_v21",
@@ -12,6 +12,7 @@
     "primary_grouped": "5-fold GroupKFold by primary study",
     "robustness": "leave-one-primary-study-out"
   },
+  "environment_policy": "Exact historical V2.1 Python/package versions are pinned and regenerated metrics must match baseline_expectations.json.",
   "forbidden_predictors": ["removal_percent", "source_link", "primary_study_id_v21"],
   "forbidden_legacy_constraints": ["Q_MAX=624"],
   "claim_policy": "Row-random results are diagnostic only. Primary scientific claims use study-aware validation; inverse-design/deployment claims remain disabled unless a future reliability gate is passed."
