@@ -15,21 +15,26 @@ permissions:
 
 jobs:
   corrected-validation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up historical Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
           cache: 'pip'
           cache-dependency-path: conference_salvage/reproducibility/requirements.txt
 
-      - name: Install pinned environment
+      - name: Install pinned historical environment
         run: python -m pip install -r conference_salvage/reproducibility/requirements.txt
+
+      - name: Show environment
+        run: |
+          python --version
+          python -m pip freeze
 
       - name: Run corrected conference validation
         run: python conference_salvage/reproducibility/run_corrected_validation.py
