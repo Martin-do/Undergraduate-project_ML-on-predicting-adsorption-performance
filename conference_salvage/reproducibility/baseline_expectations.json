@@ -1,0 +1,59 @@
+{
+  "historical_reference": {
+    "final_validation": {
+      "run_id": 32003217034,
+      "job_id": 95307465955,
+      "commit_sha": "f815a168f2c9689ae6582da6fe47f333c30a5f2e",
+      "artifact_id": 9279131675,
+      "artifact_name": "final-validation-v21-results",
+      "artifact_zip_sha256": "58e6f6c5d3cab01f7b0cfb346a79feda90e8b0c6e558b0f9cef1d9adbd8f6245"
+    },
+    "robustness": {
+      "run_id": 32003678479,
+      "job_id": 95308786043,
+      "commit_sha": "88b0217a1bda99a87e23d3057aa86dab732e40d6",
+      "artifact_id": 9279289740,
+      "artifact_name": "robustness-validation-v21-results",
+      "artifact_zip_sha256": "1b7facc585f0a6b8771545e7e2af1d397a1e0c1f128618918f672a27a35f106e"
+    }
+  },
+  "environment": {
+    "python": "3.11.15",
+    "packages": {
+      "numpy": "2.4.6",
+      "pandas": "3.0.5",
+      "scipy": "1.17.1",
+      "scikit-learn": "1.9.0",
+      "xgboost": "3.2.0",
+      "openpyxl": "3.1.5"
+    }
+  },
+  "scope": {
+    "usable_rows": 322,
+    "primary_confirmed_rows": 307,
+    "primary_confirmed_studies": 29,
+    "strict_comparable_rows": 273,
+    "strict_comparable_studies": 24
+  },
+  "strict_comparable_273": {
+    "row_random_5fold": {
+      "LR": {"r2": 0.5913287924310515, "rmse_mg_g": 449.63822405802904, "mae_mg_g": 262.4891009528775},
+      "SVR": {"r2": -0.2510514757228197, "rmse_mg_g": 786.7084103061629, "mae_mg_g": 575.2341696063949},
+      "RF": {"r2": 0.904202232059674, "rmse_mg_g": 217.69772891829172, "mae_mg_g": 108.25632400514081},
+      "XGB": {"r2": 0.8935888731481646, "rmse_mg_g": 229.44031190054181, "mae_mg_g": 128.26337504762026},
+      "STACK_RIDGE_UNCONSTRAINED": {"r2": 0.9027450235716106, "rmse_mg_g": 219.34721251450932, "mae_mg_g": 118.10815755598094}
+    },
+    "primary_group_5fold": {
+      "LR": {"r2": -3.9785369085789224, "rmse_mg_g": 1569.3762241719353, "mae_mg_g": 879.253414912994},
+      "SVR": {"r2": -0.6490477298832862, "rmse_mg_g": 903.2184831465665, "mae_mg_g": 714.4269741782875},
+      "RF": {"r2": 0.02653407890499415, "rmse_mg_g": 693.9634213033517, "mae_mg_g": 473.44654788985156},
+      "XGB": {"r2": 0.19287830607608947, "rmse_mg_g": 631.8961560910902, "mae_mg_g": 443.4072659374004},
+      "STACK_RIDGE_UNCONSTRAINED": {"r2": -0.5565653794510659, "rmse_mg_g": 877.5257852635538, "mae_mg_g": 737.6312330513688}
+    },
+    "loso": {
+      "RF": {"r2": 0.008472617536268046, "rmse_mg_g": 700.3716520479578, "mae_mg_g": 476.2408441598576, "median_ae_mg_g": 215.86598429761918},
+      "XGB": {"r2": 0.16235489017694626, "rmse_mg_g": 643.7336800818284, "mae_mg_g": 447.4621468529424, "median_ae_mg_g": 257.24224239257813}
+    }
+  },
+  "numeric_tolerance": 1e-10
+}
