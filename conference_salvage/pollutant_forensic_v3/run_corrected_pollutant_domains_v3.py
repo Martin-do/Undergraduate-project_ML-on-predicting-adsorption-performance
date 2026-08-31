@@ -28,6 +28,12 @@ SCOPES = {
 }
 
 
+def flag_mask(series: pd.Series) -> pd.Series:
+    """Interpret the frozen V2 domain flags without treating non-empty 'no' as True."""
+    normalized = series.astype("string").fillna("").str.strip().str.lower()
+    return normalized.isin({"yes", "true", "1"})
+
+
 def main():
     _, strict = gate.load_strict()
     bank = fp.models()
@@ -35,10 +41,14 @@ def main():
 
     with forensic.corrected_pollutant_engineering():
         for scope,(flag,expected_rows,expected_studies) in SCOPES.items():
-            data = strict[strict[flag].astype(bool)].copy().reset_index(drop=True)
+            data = strict[flag_mask(strict[flag])].copy().reset_index(drop=True)
             nstud = data.primary_study_id_v21.nunique()
             if len(data)!=expected_rows or nstud!=expected_studies:
-                raise RuntimeError(f"{scope}: expected {expected_rows}/{expected_studies}, got {len(data)}/{nstud}")
+                counts = strict[flag].astype("string").fillna("<NA>").value_counts(dropna=False).to_dict()
+                raise RuntimeError(
+                    f"{scope}: expected {expected_rows}/{expected_studies}, got {len(data)}/{nstud}; "
+                    f"raw_flag_counts={counts}"
+                )
             y=data[gate.base.TARGET].to_numpy(float)
             groups=data.primary_study_id_v21.astype(str).to_numpy()
             raw=data[gate.RAW_MODEL_COLS].copy()
