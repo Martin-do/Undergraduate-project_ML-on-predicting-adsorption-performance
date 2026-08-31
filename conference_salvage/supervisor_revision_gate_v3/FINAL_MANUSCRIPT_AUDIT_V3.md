@@ -1,7 +1,7 @@
-# ID-SEAD OAU V3 — Final Manuscript Audit
+# ID-SEAD OAU TekCONF V3 — Final Manuscript Audit
 
-**Audit status:** **PASS for scientific consistency and internal cross-reference.**  
-**Scope:** V3 submission-facing manuscript generated from `MANUSCRIPT_RECONSTRUCTION_V3.md` after the targeted supervisor computational revision.  
+**Audit status:** **PASS for scientific consistency, reference integrity, internal cross-reference, and OAU-template reconstruction.**  
+**Target venue:** OAU TekCONF 2026, Faculty of Technology, Obafemi Awolowo University.  
 **Inverse-design status:** **BLOCKED**; no optimisation recommendation table is restored.
 
 ## 1. Frozen evidence used
@@ -22,33 +22,31 @@
 
 The frozen V2.1 baseline is retained separately and is not overwritten.
 
-## 2. Cited ↔ listed reference audit
+## 2. Reference and citation forensic audit
 
 Submission-facing V3 bibliography: **14 entries**.  
 In-text references resolved: **14/14**.  
 Listed references not cited: **0**.  
-In-text numeric references without a listed entry: **0**.
+In-text citations without a listed entry: **0**.
 
-Claim-fit disposition:
+The final manuscript uses the OAU Faculty of Technology **author-date** citation system and an alphabetically ordered reference list. Claim-fit checks were applied so that algorithm references support algorithms, review/perspective articles are not described as primary experiments, and ID-SEAD-specific numerical claims are grounded in the frozen dataset/code/output lineage rather than external citations.
 
-- [1] Qiu et al. — field-level contaminant-removal/biochar background: appropriate.
-- [2] Zhang et al. — review of ML synthesis optimisation/adsorption modelling: appropriate as field background, not described as one new experimental optimiser.
-- [3] Wei et al. — perspective/background on ML and biochar: retained with article-type guardrail.
-- [4] Ge et al. — systematic review of ML-aided engineered biochar: retained; published funding-statement correction recorded.
-- [5] Jaffari et al. — direct aqueous adsorption-capacity ML prediction/optimisation example: appropriate.
-- [6] Yu et al. — Pb(II)/Cd(II) biochar adsorption ML optimisation example: wording kept narrower than an equivalence claim to ID-SEAD inverse search.
-- [7] Rabbi — broader activated-biochar process optimisation using ML/evolutionary algorithms: explicitly separated from direct aqueous-adsorption examples.
-- [8] Roberts et al. — hierarchical/structured cross-validation principle: appropriate; not used as proof of an ID-SEAD-specific leakage mechanism.
-- [9] Kapoor & Narayanan — general scientific-ML leakage/reproducibility warning: appropriate; not used as numerical evidence for ID-SEAD.
-- [10] Varoquaux — small-sample/CV uncertainty background: appropriate; ID-SEAD numerical intervals come from the V3 study-cluster bootstrap.
-- [11] Breiman — RF algorithm source: appropriate.
-- [12] Chen & Guestrin — XGBoost algorithm source: appropriate.
-- [13] Storn & Price — DE algorithm source: appropriate; does not resolve the conflicted legacy ID-SEAD optimisation lineage.
-- [14] Li et al. — primary adsorption source for the high-capacity activated-carbon/methylene-blue lineage: appropriate. DOI `10.1016/j.biortech.2020.124540`; the paper reports maximum adsorption capacity about 2251 mg/g.
+Specific guardrails retained:
+- Qiu et al. — field-level biochar/remediation background only.
+- Zhang et al. — review of ML synthesis optimisation/adsorption modelling; not presented as one new experimental optimiser.
+- Wei et al. — perspective/background article, not a primary adsorption experiment.
+- Ge et al. — systematic review; published funding-statement correction recorded.
+- Jaffari et al. — direct aqueous adsorption-capacity ML prediction/optimisation example.
+- Yu et al. — Pb(II)/Cd(II) biochar adsorption ML optimisation example; wording remains narrower than equivalence to ID-SEAD inverse search.
+- Rabbi — broader activated-biochar process optimisation and explicitly separated from direct aqueous-adsorption examples.
+- Roberts et al. — structured/hierarchical validation principle, not proof of an ID-SEAD-specific leakage mechanism.
+- Kapoor & Narayanan — general scientific-ML leakage/reproducibility warning, not numerical evidence for ID-SEAD.
+- Varoquaux — general small-sample/CV uncertainty warning; ID-SEAD numerical intervals come from the V3 study-cluster bootstrap.
+- Breiman and Chen & Guestrin — direct RF/XGBoost algorithm sources.
+- Storn & Price — DE algorithm source; does not resolve the conflicted legacy ID-SEAD optimisation lineage.
+- Li et al. — primary adsorption source for the high-capacity activated-carbon/methylene-blue lineage; DOI `10.1016/j.biortech.2020.124540`, reporting maximum adsorption capacity about 2251 mg/g.
 
 ## 3. Numerical consistency audit
-
-The following submission-facing statements were checked against the frozen V3 outputs and historical V2.1 baseline.
 
 ### Population/provenance
 - 322 usable-target observations — PASS.
@@ -63,7 +61,7 @@ The following submission-facing statements were checked against the frozen V3 ou
 - grouped fold ranges RF -20.59 to 0.46; XGB -13.54 to 0.44 — PASS.
 - Ridge mean grouped outer-fold R2 -39.84; minimum -103.29 — PASS.
 
-### Pollutant representation forensic result
+### Pollutant-representation forensic result
 - 122/273 row disagreements = 44.7% — PASS.
 - 14/29 unique pollutant labels affected — PASS.
 - remove-pollutant grouped/LOSO R2: RF 0.5861/0.5802; XGB 0.4818/0.4625 — PASS.
@@ -80,23 +78,22 @@ The following submission-facing statements were checked against the frozen V3 ou
 - strict agricultural RF/XGB R2 -1.741 / -2.047 — PASS.
 - broad biogenic RF/XGB 0.311 / 0.642 — PASS.
 - waste-derived carbon RF/XGB 0.545 / 0.520 — PASS.
-- all equal-study MAE/RMSE values in Table II match the frozen domain output — PASS.
+- equal-study MAE/RMSE values in the final domain table match the frozen outputs — PASS.
 
 ### Alshabib restricted-domain failure
 - observed 270.27 / 199.76 mg/g — PASS.
 - broad-biogenic RF 1777.18 / 1755.03 mg/g — PASS.
 - broad-biogenic XGB 1724.41 / 1724.41 mg/g — PASS.
-- wording is restricted to domain-specific failure; manuscript does not generalize this single study to all studies — PASS.
+- wording remains restricted to a domain-specific complete-study failure and is not generalized to every study — PASS.
 
 ### QMAX lineage
-- reconstructed maximum 2239 mg/g traces to the Li et al. family and is strict-comparable — PASS.
+- reconstructed maximum 2239 mg/g traces to the Li et al. lineage and is strict-comparable — PASS.
 - primary paper reports maximum adsorption about 2251 mg/g — PASS.
-- manuscript disables, rather than replaces with another universal ceiling, the legacy `Q_MAX=624 mg/g` rule — PASS.
+- manuscript disables, rather than substitutes another universal ceiling for, legacy `Q_MAX=624 mg/g` — PASS.
 
 ## 4. Mechanism/causality wording audit
 
 The final V3 text does **not** claim that:
-
 - the entire dataset cannot generalize;
 - pollutant context is intrinsically harmful;
 - study association proves causal identity leakage;
@@ -104,17 +101,16 @@ The final V3 text does **not** claim that:
 - model agreement proves reliability;
 - positive pooled LOSO validates deployment or inverse design.
 
-The accepted mechanism is narrower:
+Accepted mechanism:
 
 > Study-aware validation exposed a defective derived pollutant representation. A target-blind exact-label repair restored meaningful average cross-study forward transfer while preserving pollutant context, but study-level uncertainty and domain-specific reliability failures still block inverse design.
 
 ## 5. Reliability/inverse-design disposition
 
 The final text preserves all required barriers:
-
 - study-aware transfer is primary;
-- the four-study intended agricultural domain fails strongly;
-- pooled positive R2 is qualified by wide study-cluster uncertainty;
+- the intended agricultural domain contains only four studies and fails strongly;
+- positive pooled R2 is qualified by wide study-cluster uncertainty;
 - catastrophic restricted-domain complete-study error remains visible;
 - Ridge stacking superiority is disabled;
 - simple applicability-distance diagnostics are not presented as a validated safety gate;
@@ -123,33 +119,45 @@ The final text preserves all required barriers:
 
 **Inverse design remains BLOCKED.**
 
-## 6. Submission-facing document QA
+## 6. OAU TekCONF official-template document QA
 
-Generated V3 document:
-- `ID-SEAD_Conference_Reconstruction_V3.docx`
-- SHA-256 `3fd457e794dea72673f4ef20cc238ec630ddc782ab0522080ac0324823847698`
+Final submission-facing Word document:
+- `ID-SEAD_OAUTekCONF2026_V3_Official_Template.docx`
+- SHA-256 `30709a03c98209618812aec9ba2221ae48047769a9039f692ed2b09b98bf000e`
 
-Generated PDF:
-- `ID-SEAD_Conference_Reconstruction_V3.pdf`
-- SHA-256 `6dcbbb3b7040e005d22e67011d9289600dc98c86cf07275e1bb691778a4dd82e`
+Proof PDF:
+- `ID-SEAD_OAUTekCONF2026_V3_Official_Template.pdf`
+- SHA-256 `d12740528cc32e2e1ca029963d9c3f89e96b03bff8bb834f572c98ad031006ec`
 
-Layout:
-- A4;
-- 0.75-inch margins inherited from the supplied conference-style manuscript;
-- 4 pages, below the five-page conference maximum previously recorded;
-- all four rendered pages visually inspected;
-- no clipping, table overflow, overlapping objects or missing-glyph defects observed;
-- title/authors/affiliations retained from the supplied manuscript lineage;
-- Figure 1 updated to the V3 pollutant-repair result;
-- Tables I-II updated to V3 values.
+The document was rebuilt **inside the supervisor-supplied `paper_template.docx`**, rather than merely imitating its appearance.
 
-## 7. Closure state
+Template compliance checks:
+- single-column OAU Faculty of Technology template retained;
+- native custom Word styles used for title, author names, affiliations, abstract, `1_maintext`, section/subsection numbering, figure caption, table captions and references;
+- relevant custom-style XML definitions are semantically identical to the supplied template;
+- no manual page breaks inserted;
+- main headings use the native numbered section style and uppercase titles;
+- second-level headings use the native subsection style;
+- abstract = **237 words**, below the template's 250-word expectation;
+- keywords = **6**, within the template range;
+- one PNG figure inserted after first textual mention with caption below;
+- two genuine Microsoft Word tables, each with caption above;
+- SI units retained;
+- references use OAU Faculty of Technology author-date form and alphabetical ordering;
+- final length = **5 pages**, within the published OAU TekCONF maximum of 12 pages;
+- all five DOCX-rendered pages visually inspected;
+- the PDF was independently rendered and all five pages visually inspected;
+- no clipping, overlapping objects, missing glyphs, broken table rows or orphaned split rows observed.
+
+## 7. Final closure state
 
 Targeted V3 computational revision: **CLOSED / PASS**.  
 V3 scientific interpretation: **FROZEN**.  
-Reference/citation completeness: **PASS**.  
+Reference/citation completeness: **PASS (14/14)**.  
+Claim-to-source forensic audit: **PASS for the current final text**.  
 Numerical manuscript consistency: **PASS**.  
+OAU official-template reconstruction: **PASS**.  
 Rendered DOCX/PDF layout QA: **PASS**.  
 Inverse-design/deployment recommendation claim: **DISABLED**.
 
-Remaining actions are operational/co-authorial rather than new post hoc modelling: supervisor/co-author review, official portal metadata/template compliance, similarity check and IEEE PDF eXpress where required.
+No further post-hoc modelling is indicated at this stage. Remaining actions are supervisor/co-author review, confirmation of final author/affiliation/sub-theme/portal metadata, and OAU TekCONF submission.
