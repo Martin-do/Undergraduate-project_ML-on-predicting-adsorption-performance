@@ -17,7 +17,7 @@ permissions:
 jobs:
   supervisor-revision-gate-v3:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +39,9 @@ jobs:
 
       - name: Run targeted supervisor revision analyses
         run: python conference_salvage/supervisor_revision_gate_v3/run_supervisor_revision_gate_v3.py
+
+      - name: Run V3 applicability-domain diagnostic
+        run: python conference_salvage/supervisor_revision_gate_v3/run_applicability_domain_v3.py
 
       - name: Record environment and checksums
         if: always()
