@@ -15,7 +15,7 @@ permissions:
 jobs:
   pollutant-forensic-v3:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +32,9 @@ jobs:
 
       - name: Run pollutant representation forensic audit
         run: python conference_salvage/pollutant_forensic_v3/run_pollutant_representation_forensic_v3.py
+
+      - name: Run corrected pollutant-class LOSO uncertainty audit
+        run: python conference_salvage/pollutant_forensic_v3/run_corrected_pollutant_uncertainty_v3.py
 
       - name: Record environment and checksums
         if: always()
