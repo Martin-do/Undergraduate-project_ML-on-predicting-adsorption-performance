@@ -1,0 +1,53 @@
+name: ID-SEAD OAU V3 pollutant representation forensic
+
+on:
+  push:
+    branches:
+      - conference/id-sead-oau-v3-supervisor-revision
+    paths:
+      - 'conference_salvage/pollutant_forensic_v3/**'
+      - '.github/workflows/id-sead-oau-v3-pollutant-forensic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pollutant-forensic-v3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pinned historical Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+          cache: 'pip'
+          cache-dependency-path: conference_salvage/reproducibility/requirements.txt
+
+      - name: Install pinned environment
+        run: python -m pip install -r conference_salvage/reproducibility/requirements.txt
+
+      - name: Run pollutant representation forensic audit
+        run: python conference_salvage/pollutant_forensic_v3/run_pollutant_representation_forensic_v3.py
+
+      - name: Record environment and checksums
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=conference_salvage/pollutant_forensic_v3/outputs
+          python --version > "$OUT/python_version.txt"
+          python -m pip freeze > "$OUT/pip_freeze.txt"
+          (cd "$OUT" && sha256sum * > SHA256SUMS.txt)
+
+      - name: Upload forensic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: id-sead-oau-v3-pollutant-forensic
+          path: conference_salvage/pollutant_forensic_v3/outputs/
+          if-no-files-found: error
+          retention-days: 90
