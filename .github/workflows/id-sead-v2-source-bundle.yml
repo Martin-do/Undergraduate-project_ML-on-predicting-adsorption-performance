@@ -1,0 +1,61 @@
+name: ID-SEAD V2 source bundle
+
+on:
+  push:
+    branches:
+      - conference/id-sead-salvage
+    paths:
+      - '.github/workflows/id-sead-v2-source-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-source-bundle:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble exact reviewer source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="id-sead-v2-source-bundle"
+          mkdir -p "$ROOT/validation_v2" "$ROOT/conference_salvage/reviewer_revision_gate_v2" "$ROOT/conference_salvage/reproducibility" "$ROOT/workflows"
+
+          cp validation_v2/final_validation_v21.py "$ROOT/validation_v2/"
+          cp validation_v2/robustness_validation_v21.py "$ROOT/validation_v2/"
+          cp validation_v2/build_dataset_v21.py "$ROOT/validation_v2/"
+          cp validation_v2/study_aware_validation.py "$ROOT/validation_v2/"
+          cp validation_v2/feature_parity_validation.py "$ROOT/validation_v2/"
+          cp validation_v2/feature_parity_validation_fixed.py "$ROOT/validation_v2/"
+          cp validation_v2/external_validation_v2.py "$ROOT/validation_v2/"
+
+          cp conference_salvage/reviewer_revision_gate_v2/run_reviewer_revision_gate_v2.py "$ROOT/conference_salvage/reviewer_revision_gate_v2/"
+          cp conference_salvage/reviewer_revision_gate_v2/run_identity_loso_followup.py "$ROOT/conference_salvage/reviewer_revision_gate_v2/"
+          cp conference_salvage/reviewer_revision_gate_v2/run_crossed_missingness_sensitivity.py "$ROOT/conference_salvage/reviewer_revision_gate_v2/"
+
+          cp conference_salvage/reproducibility/run_corrected_validation.py "$ROOT/conference_salvage/reproducibility/"
+          cp conference_salvage/reproducibility/config.json "$ROOT/conference_salvage/reproducibility/"
+          cp conference_salvage/reproducibility/baseline_expectations.json "$ROOT/conference_salvage/reproducibility/"
+          cp conference_salvage/reproducibility/requirements.txt "$ROOT/conference_salvage/reproducibility/"
+
+          cp .github/workflows/id-sead-reviewer-revision-gate-v2.yml "$ROOT/workflows/"
+          cp .github/workflows/id-sead-conference-salvage-reproducibility.yml "$ROOT/workflows/"
+          cp .github/workflows/id-sead-v2-source-bundle.yml "$ROOT/workflows/"
+
+          printf 'Repository: %s\nBranch: %s\nCommit: %s\nGenerated UTC: %s\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            > "$ROOT/SOURCE_BUNDLE_PROVENANCE.txt"
+
+          find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/SHA256SUMS.txt"
+
+      - name: Upload source bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: id-sead-v2-source-bundle
+          path: id-sead-v2-source-bundle/
+          if-no-files-found: error
+          retention-days: 90
